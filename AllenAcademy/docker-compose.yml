@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  login:
+    build: ./login
+    ports:
+      - "8001:8000"
+    networks:
+      - backend
+  register:
+    build: ./register
+    ports:
+      - "8002:8000"
+    networks:
+      - backend
+  attendance:
+    build: ./attendance
+    ports:
+      - "8003:8000"
+    networks:
+      - backend
+  enroll:
+    build: ./enroll
+    ports:
+      - "8004:8000"
+    networks:
+      - backend
+  grades:
+    build: ./grades
+    ports:
+      - "8005:8000"
+    networks:
+      - backend
+  salary:
+    build: ./salary
+    ports:
+      - "8006:8000"
+    networks:
+      - backend
+networks:
+  backend:
