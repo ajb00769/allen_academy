@@ -6,35 +6,58 @@ services:
       - "8001:8000"
     networks:
       - backend
+
   register:
     build: ./register
     ports:
       - "8002:8000"
     networks:
       - backend
+
   attendance:
     build: ./attendance
     ports:
       - "8003:8000"
     networks:
       - backend
+
   enroll:
     build: ./enroll
     ports:
       - "8004:8000"
     networks:
       - backend
+
   grades:
     build: ./grades
     ports:
       - "8005:8000"
     networks:
       - backend
+
   salary:
     build: ./salary
     ports:
       - "8006:8000"
     networks:
       - backend
+
+  development-db:
+    image: postgres
+    networks:
+      - backend
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    networks:
+      - backend
+
 networks:
   backend:

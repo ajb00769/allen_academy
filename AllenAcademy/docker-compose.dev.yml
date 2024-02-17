@@ -1,0 +1,67 @@
+version: '3.9'
+services:
+  login:
+    build: ./login
+    depends_on:
+      - web
+    networks:
+      - backend
+
+  register:
+    build: ./register
+    depends_on:
+      - web
+    networks:
+      - backend
+
+  attendance:
+    build: ./attendance
+    depends_on:
+      - web
+    networks:
+      - backend
+
+  enroll:
+    build: ./enroll
+    depends_on:
+      - web
+    networks:
+      - backend
+
+  grades:
+    build: ./grades
+    depends_on:
+      - web
+    networks:
+      - backend
+
+  salary:
+    build: ./salary
+    depends_on:
+      - web
+    networks:
+      - backend
+
+  development-db:
+    image: postgres
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust 
+    networks:
+      - backend
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - development-db
+    env_file:
+      - .env.dev
+    networks:
+      - backend
+
+networks:
+  backend:
