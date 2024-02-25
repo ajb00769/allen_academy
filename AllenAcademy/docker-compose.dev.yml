@@ -4,6 +4,8 @@ services:
     build: ./login
     depends_on:
       - web
+    expose:
+      - "62678"
     networks:
       - backend
 
@@ -11,6 +13,8 @@ services:
     build: ./register
     depends_on:
       - web
+    expose:
+      - "50047"
     networks:
       - backend
 
@@ -18,6 +22,8 @@ services:
     build: ./attendance
     depends_on:
       - web
+    expose:
+      - "62153"
     networks:
       - backend
 
@@ -25,6 +31,8 @@ services:
     build: ./enroll
     depends_on:
       - web
+    expose:
+      - "54410"
     networks:
       - backend
 
@@ -32,6 +40,8 @@ services:
     build: ./grades
     depends_on:
       - web
+    expose:
+      - "52143"
     networks:
       - backend
 
@@ -39,6 +49,8 @@ services:
     build: ./salary
     depends_on:
       - web
+    expose:
+      - "54159"
     networks:
       - backend
 

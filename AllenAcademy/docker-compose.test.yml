@@ -1,0 +1,72 @@
+version: '3.9'
+services:
+  login:
+    build: ./login
+    depends_on:
+      - web
+    expose:
+      - "62678"
+    networks:
+      - backend
+
+  register:
+    build: ./register
+    depends_on:
+      - web
+    expose:
+      - "50047"
+    networks:
+      - backend
+
+  attendance:
+    build: ./attendance
+    depends_on:
+      - web
+    expose:
+      - "62153"
+    networks:
+      - backend
+
+  enroll:
+    build: ./enroll
+    depends_on:
+      - web
+    expose:
+      - "54410"
+    networks:
+      - backend
+
+  grades:
+    build: ./grades
+    depends_on:
+      - web
+    expose:
+      - "52143"
+    networks:
+      - backend
+
+  salary:
+    build: ./salary
+    depends_on:
+      - web
+    expose:
+      - "54159"
+    networks:
+      - backend
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - development-db
+    env_file:
+      - .env.dev
+    networks:
+      - backend
+
+networks:
+  backend:
