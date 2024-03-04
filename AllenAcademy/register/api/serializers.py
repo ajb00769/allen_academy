@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from register.models import (
     AllAccountIds,
-    EmployeeAccounts,
-    StudentAccounts,
-    ParentAccounts,
+    # EmployeeAccounts,
+    # StudentAccounts,
+    # ParentAccounts,
 )
 
 
