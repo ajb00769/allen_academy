@@ -18,7 +18,7 @@ def date_time_handler(format):
             return datetime.now()
         case "date":
             return date.today()
-        case "key expiry":
+        case "key_expiry":
             return date.today() + relativedelta(months=1)
         case _:
             raise ValueError(

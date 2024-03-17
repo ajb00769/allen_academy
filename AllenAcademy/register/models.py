@@ -22,7 +22,11 @@ class RegistrationKey(models.Model):
     an account for someone with a different name.
     """
 
-    generated_key = models.CharField(max_length=19, unique=True, null=False)
+    generated_key = models.CharField(
+        max_length=19,
+        unique=True,
+        null=False,
+    )
     key_type = models.CharField(
         max_length=3,
         choices=REGISTRATION_KEY_TYPES,

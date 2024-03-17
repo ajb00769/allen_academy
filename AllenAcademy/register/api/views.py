@@ -1,33 +1,35 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.db import transaction
-from ..models import (
-    AllAccountId,
-    StudentAccount,
-    ParentAccount,
-    EmployeeAccount,
-    RegistrationKey,
-)
-from ..custom import generate_account_id, generate_registration_key
+from .serializers import RegistrationKeySerializer
+from ..custom import generate_registration_key, date_time_handler
+from ..models import RegistrationKey
 
 
 @api_view(["POST"])
 def register(request):
     pass
-    # all_account_id_counts = AllAccountId.objects.filter(
-    #     generated_id__startswith=current_year
-    # ).count()
-
-    # new_id = generate_account_id(all_account_id_counts)
-    # save_new_id = AllAccountId(generated_id=new_id)
-    # save_new_id.save()
-
-    # get_fk = AllAccountId.objects.filter(generated_id=new_id)
 
 
 @api_view(["POST"])
 def reg_key(request):
-    new_key = generate_registration_key()
-    # if new_key not in RegistrationKey.objects.filter(generated_key=new_key):
-    # return new_key
-    return Response({"key": new_key})
+    with transaction.atomic():
+        new_key = generate_registration_key()
+        while new_key in RegistrationKey.objects.values_list(
+            "generated_key", flat=True
+        ):
+            new_key = generate_registration_key()
+
+        client_data = request.data.copy()
+        server_data = {
+            "generated_key": new_key,
+            "key_expiry": date_time_handler(format="key_expiry"),
+        }
+
+        combined = {**client_data, **server_data}
+
+        new_key_serializer = RegistrationKeySerializer(data=combined)
+        if new_key_serializer.is_valid():
+            new_key_serializer.save()
+            return Response(new_key_serializer, status=201)
+        return Response(new_key_serializer.errors, status=400)
