@@ -1,5 +1,5 @@
 **/__pycache__/
-**/migrations/
 **/.env*
 **/env
 **/dockerlogs.log
+**/*_api_logs.log
