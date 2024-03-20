@@ -9,8 +9,8 @@ SUFFIX_CHOICES = [
 
 
 STUDENT_ACCOUNT_STATUS_CHOICES = [
-    ("A", "Active"),
     ("N", "New account, not yet activated"),
+    ("A", "Active"),
     ("E", "Expelled"),
     ("S", "Suspended"),
     ("D", "Dropped out"),

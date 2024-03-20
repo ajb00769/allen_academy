@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = []
@@ -43,7 +42,7 @@ class Migration(migrations.Migration):
                 ("password", models.BinaryField(max_length=255)),
                 ("allow_login", models.BooleanField(default=True)),
                 (
-                    "employee_id",
+                    "account_id",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.PROTECT,
                         to="register.allaccountid",
@@ -68,7 +67,7 @@ class Migration(migrations.Migration):
                 ("password", models.BinaryField(max_length=255)),
                 ("allow_login", models.BooleanField(default=True)),
                 (
-                    "parent_id",
+                    "account_id",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.PROTECT,
                         to="register.allaccountid",
@@ -122,7 +121,7 @@ class Migration(migrations.Migration):
                 ("password", models.BinaryField(max_length=255)),
                 ("allow_login", models.BooleanField(default=True)),
                 (
-                    "student_id",
+                    "account_id",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.PROTECT,
                         to="register.allaccountid",
@@ -204,11 +203,11 @@ class Migration(migrations.Migration):
                 ),
                 ("violations", models.BooleanField(default=False)),
                 (
-                    "student_id",
+                    "account_id",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.PROTECT,
                         to="register.studentaccount",
-                        to_field="student_id",
+                        to_field="account_id",
                     ),
                 ),
             ],
@@ -271,11 +270,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "parent_id",
+                    "account_id",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.PROTECT,
                         to="register.parentaccount",
-                        to_field="parent_id",
+                        to_field="account_id",
                     ),
                 ),
                 (
@@ -283,7 +282,7 @@ class Migration(migrations.Migration):
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="register.studentdetail",
-                        to_field="student_id",
+                        to_field="account_id",
                     ),
                 ),
             ],
@@ -352,11 +351,11 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "employee_id",
+                    "account_id",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.PROTECT,
                         to="register.employeeaccount",
-                        to_field="employee_id",
+                        to_field="account_id",
                     ),
                 ),
             ],

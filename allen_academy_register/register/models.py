@@ -47,7 +47,7 @@ class AllAccountId(models.Model):
 
 
 class StudentAccount(models.Model):
-    student_id = models.OneToOneField(
+    account_id = models.OneToOneField(
         "AllAccountId",
         to_field="generated_id",
         null=False,
@@ -59,9 +59,9 @@ class StudentAccount(models.Model):
 
 
 class StudentDetail(models.Model):
-    student_id = models.OneToOneField(
+    account_id = models.OneToOneField(
         "StudentAccount",
-        to_field="student_id",
+        to_field="account_id",
         null=False,
         on_delete=models.PROTECT,
     )
@@ -79,18 +79,21 @@ class StudentDetail(models.Model):
     status = models.CharField(
         max_length=1,
         choices=STUDENT_ACCOUNT_STATUS_CHOICES,
+        default=STUDENT_ACCOUNT_STATUS_CHOICES[0][0],
         null=False,
     )
     scholar_type = models.CharField(
         max_length=1,
         choices=SCHOLAR_TYPE_CHOICES,
+        default=SCHOLAR_TYPE_CHOICES[0][0],
         null=False,
     )
     violations = models.BooleanField(default=False)
+    # TODO: Handle empty string input for phone number and suffix
 
 
 class EmployeeAccount(models.Model):
-    employee_id = models.OneToOneField(
+    account_id = models.OneToOneField(
         "AllAccountId",
         to_field="generated_id",
         null=False,
@@ -102,9 +105,9 @@ class EmployeeAccount(models.Model):
 
 
 class EmployeeDetail(models.Model):
-    employee_id = models.OneToOneField(
+    account_id = models.OneToOneField(
         "EmployeeAccount",
-        to_field="employee_id",
+        to_field="account_id",
         null=False,
         on_delete=models.PROTECT,
     )
@@ -132,7 +135,7 @@ class EmployeeDetail(models.Model):
 
 
 class ParentAccount(models.Model):
-    parent_id = models.OneToOneField(
+    account_id = models.OneToOneField(
         "AllAccountId",
         to_field="generated_id",
         null=False,
@@ -144,9 +147,9 @@ class ParentAccount(models.Model):
 
 
 class ParentDetail(models.Model):
-    parent_id = models.OneToOneField(
+    account_id = models.OneToOneField(
         "ParentAccount",
-        to_field="parent_id",
+        to_field="account_id",
         on_delete=models.PROTECT,
     )
     first_name = models.CharField(null=False, max_length=80)
@@ -167,7 +170,7 @@ class ParentDetail(models.Model):
     )
     student = models.ForeignKey(
         "StudentDetail",
-        to_field="student_id",
+        to_field="account_id",
         null=False,
         on_delete=models.CASCADE,
     )

@@ -13,7 +13,7 @@ phone_validator = RegexValidator(
 def date_time_handler(format):
     match format:
         case "year":
-            return str(datetime.now().year)
+            return datetime.now().year
         case "timestamp":
             return datetime.now()
         case "date":

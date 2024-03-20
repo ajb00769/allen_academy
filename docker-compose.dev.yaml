@@ -8,6 +8,8 @@ services:
       - db
     ports:
       - "8000:8000"
+    volumes:
+      - ./allen_academy_register:/usr/src/app
     networks:
       - backend
 
