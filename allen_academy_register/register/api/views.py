@@ -1,8 +1,8 @@
-from django.db import IntegrityError
-from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.contrib.auth.hashers import make_password
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from django.db import transaction
 from .serializers import (
     RegistrationKeySerializer,
     AccountIdSerializer,
@@ -13,7 +13,11 @@ from .serializers import (
     ParentAccountSerializer,
     ParentDetailSerializer,
 )
-from ..custom import generate_registration_key, date_time_handler, generate_account_id
+from ..custom import (
+    generate_registration_key,
+    generate_account_id,
+    date_time_handler,
+)
 from ..models import (
     RegistrationKey,
     AllAccountId,
@@ -41,6 +45,15 @@ def register(request):
         "EMP": EmployeeAccount,
     }
 
+    """
+    Validate key_type before anything else, early program termination for
+    invalid key types. Valid key_type will then be assigned to a dict for
+    input validation into the db.
+    """
+    key_type = request.data.get("key_type")
+    if key_type not in serializer_map:
+        return Response({"error": "Invalid key type."}, status=400)
+
     for_reg_key_validation = {
         "reg_key": request.data.get("reg_key"),
         "gen_for": [
@@ -49,36 +62,44 @@ def register(request):
             request.data.get("middle_name"),
             request.data.get("suffix"),
         ],
+        "key_type": key_type,
     }
-
-    validate_reg_key = validate_registration_key(for_reg_key_validation).get("error")
-    if not validate_reg_key:
-        return Response({"error": validate_reg_key}, status=400)
-
-    key_type = request.data.get("key_type")
-    if key_type not in serializer_map:
-        return Response({"error": "Invalid key type."}, status=400)
 
     account_serializer_class, detail_serializer_class = serializer_map[key_type]
     account_class = model_map[key_type]
 
-    # Generate a new account id and save into AllAccountId table
+    # Get the initial counts and generate the initial account id
     current_id_counts = AllAccountId.objects.all().count()
     new_account_id = generate_account_id(current_id_counts)
-    saved_account_id = save_account_id(account_id=new_account_id)
-    if saved_account_id is None:
-        return Response(
-            {"error": "Unable to create an account id. Please try again later"},
-            status=400,
-        )
 
     with transaction.atomic():
+        """
+        All operations that involve altering or inserting data into the db will be
+        placed within the scope of transaction.atomic to treat it as a single
+        transaction.
+        
+        The validate_registration_key function alters the key_used column of a key
+        making it unusable afterwards. If this is done outside of the scope of
+        transaction.atomic if the succeeding operations fail an account will not
+        be created but the registration key will become unusable.
+        """
+        validate_reg_key = validate_registration_key(for_reg_key_validation).get(
+            "error"
+        )
+        if validate_reg_key:
+            return Response({"error": validate_reg_key}, status=400)
+
+        saved_account_id = save_account_id(account_id=new_account_id)
+        if isinstance(saved_account_id, dict):
+            return Response({"error": saved_account_id.get("error")}, status=400)
+
         # Get the id object from AllAccountId to plug into the OneToOne account_id field
         all_account_id_object = AllAccountId.objects.get(generated_id=saved_account_id)
         account_serializer_data = request.data.copy()
         account_serializer_data.update(
             {
                 "account_id": all_account_id_object.generated_id,
+                "password": make_password(account_serializer_data.get("password")),
             }
         )
         account_serializer = account_serializer_class(data=account_serializer_data)
@@ -89,14 +110,10 @@ def register(request):
 
         # Populate the AccountDetail table
         account_object = account_class.objects.get(
-            account_id=account_serializer.data["account_id"]
+            account_id=account_serializer.data.get("account_id")
         )
         detail_serializer_data = request.data.copy()
-        detail_serializer_data.update(
-            {
-                "account_id": account_object.account_id,
-            }
-        )
+        detail_serializer_data.update({"account_id": account_object.account_id})
         detail_serializer = detail_serializer_class(data=detail_serializer_data)
 
         if not detail_serializer.is_valid():
@@ -117,14 +134,14 @@ def reg_key(request):
         ):
             new_key = generate_registration_key()
 
-        server_data = {
-            "generated_key": new_key,
-            "key_expiry": date_time_handler(format="key_expiry"),
-        }
+        client_data.update(
+            {
+                "generated_key": new_key,
+                "key_expiry": date_time_handler(format="key_expiry"),
+            }
+        )
 
-        combined = {**client_data, **server_data}
-
-        new_key_serializer = RegistrationKeySerializer(data=combined)
+        new_key_serializer = RegistrationKeySerializer(data=client_data)
         if new_key_serializer.is_valid():
             new_key_serializer.save()
             return Response(new_key_serializer.data, status=201)
@@ -152,41 +169,56 @@ def save_account_id(account_id, max_retries=3):
 
                 if account_id_serializer.is_valid():
                     account_id_serializer.save()
-                    return account_id_serializer.data["generated_id"]
+                    return account_id_serializer.data.get("generated_id")
         except IntegrityError:
             print(
                 "Failed to save new account id, id already exists."
                 + f"\nAttempt: {attempt + 1} of {max_retries}."
             )
             if attempt == max_retries - 1:
-                raise ValidationError(
-                    "Unable to create new account id. Please try again later."
+                return ValidationError(
+                    {
+                        "error": "Unable to create new account id. Please try again later."
+                    }
                 )
 
 
 def validate_registration_key(data):
-    reg_key = data["reg_key"]
-    gen_for_sanitized = [i for i in data["gen_for"] if i]
+    reg_key = data.get("reg_key")
+
+    # Terminate the function early if the key does not exist
+    try:
+        reg_key_object = RegistrationKey.objects.get(generated_key=reg_key)
+    except ObjectDoesNotExist:
+        return {"error": "Invalid key."}
+
+    # Terminate the function early if key is for another account type
+    if reg_key_object.key_type != data.get("key_type"):
+        return {"error": "Key type is for a different account type."}
+
+    reg_key_errors = []
+    # Sanitize None or empty string for suffix and middle name
+    gen_for_sanitized = [i for i in data.get("gen_for") if i]
     gen_for = " ".join(gen_for_sanitized)
 
-    reg_key_object = RegistrationKey.objects.get(generated_key=reg_key)
-
-    if reg_key_object.key_expiry >= date_time_handler("date"):
-        return {
-            "error": "Key Error: already expired. Please request for a new key.",
-        }  # key already expired
+    if reg_key_object.key_expiry <= date_time_handler("date"):
+        reg_key_errors.append("Key already expired, please request a new key.")
 
     if reg_key_object.key_used:
-        return {
-            "error": "Key Error: already used.",
-        }  # key already used
+        reg_key_errors.append("Key already used.")
 
-    if reg_key_object is not None and reg_key_object.generated_for == gen_for:
+    if (
+        reg_key_object is not None
+        and reg_key_object.generated_for == gen_for
+        and not reg_key_errors
+    ):
         reg_key_object.key_used = True
         reg_key_object.save()
         return {
             "success": True,
         }
+
+    reg_key_errors.append("Invalid key.")
     return {
-        "error": "Key Error: does not exist or does not match the name.",
+        "error": " ".join(reg_key_errors),
     }

@@ -33,7 +33,9 @@ def generate_account_id(all_account_id_counts):
     """
     if all_account_id_counts > 99999:
         return ValueError(
-            "ID length exceeded. More than 99,999 IDs created for the year."
+            {
+                "error": "ID length exceeded. More than 99,999 IDs created for the year.",
+            }
         )
 
     year = str(datetime.now().year)
