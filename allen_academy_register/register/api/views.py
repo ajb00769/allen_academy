@@ -25,6 +25,11 @@ from ..models import (
     ParentAccount,
     EmployeeAccount,
 )
+import logging
+
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
@@ -33,6 +38,9 @@ def register(request):
     Expecting a key type and registration key input from client
     that was generated previously in reg_key api.
     """
+
+    func_name = register.__name__
+
     serializer_map = {
         "STU": (StudentAccountSerializer, StudentDetailSerializer),
         "PAR": (ParentAccountSerializer, ParentDetailSerializer),
@@ -52,6 +60,8 @@ def register(request):
     """
     key_type = request.data.get("key_type")
     if key_type not in serializer_map:
+        timestamp = date_time_handler(format="timestamp")
+        logger.warning(f"[{timestamp}]{func_name}: Invalid key type was passed.")
         return Response({"error": "Invalid key type."}, status=400)
 
     for_reg_key_validation = {
@@ -125,8 +135,11 @@ def register(request):
 
 @api_view(["POST"])
 def reg_key(request):
-    with transaction.atomic():
-        client_data = request.data.copy()
+    func_name = reg_key.__name__
+
+    client_data = request.data.copy()
+
+    try:
         new_key = generate_registration_key()
 
         while new_key in RegistrationKey.objects.values_list(
@@ -142,10 +155,20 @@ def reg_key(request):
         )
 
         new_key_serializer = RegistrationKeySerializer(data=client_data)
-        if new_key_serializer.is_valid():
-            new_key_serializer.save()
-            return Response(new_key_serializer.data, status=201)
-        return Response(new_key_serializer.errors, status=400)
+
+        with transaction.atomic():
+            if new_key_serializer.is_valid():
+                new_key_serializer.save()
+                return Response(new_key_serializer.data, status=201)
+            return Response(new_key_serializer.errors, status=400)
+    except Exception as e:
+        timestamp = date_time_handler(format="timestamp")
+        logger.exception(
+            f"[{timestamp}]{func_name}: An error occured while creating the registration key. {e}"
+        )
+        return Response(
+            {"error": "An error occured while creating the registratoin key."}
+        )
 
 
 #########################################################################
@@ -159,31 +182,53 @@ def reg_key(request):
 
 
 def save_account_id(account_id, max_retries=3):
+    func_name = save_account_id.__name__
+
     account_id_serializer = AccountIdSerializer(data={"generated_id": account_id})
+
     for attempt in range(max_retries):
         try:
             with transaction.atomic():
                 if attempt > 0:
-                    current_id_counts = AllAccountId.objects.all().count()
+                    current_year = date_time_handler(format="year")
+                    current_id_counts = AllAccountId.objects.filter(
+                        generated_id__startswith=current_year
+                    ).count()
                     account_id = generate_account_id(current_id_counts)
+
+                if isinstance(account_id, dict):
+                    account_id_err_msg = account_id.get("error")
+                    timestamp = date_time_handler(format="timestamp")
+                    logger.error(f"[{timestamp}]{func_name}: {account_id_err_msg}")
+                    return {"error": account_id_err_msg}
 
                 if account_id_serializer.is_valid():
                     account_id_serializer.save()
                     return account_id_serializer.data.get("generated_id")
         except IntegrityError:
-            print(
-                "Failed to save new account id, id already exists."
-                + f"\nAttempt: {attempt + 1} of {max_retries}."
+            timestamp = date_time_handler(format="timestamp")
+            logger.exception(
+                f"[{timestamp}]{func_name}: Failed to save new account id: {account_id} id already exists. Attempt: {attempt + 1} of {max_retries}."
             )
             if attempt == max_retries - 1:
+                logger.warning(
+                    f"[{timestamp}]{func_name}: Account ID creation error more than 3 attempts to create account ID but all failed. Consider checking the table."
+                )
                 return ValidationError(
                     {
                         "error": "Unable to create new account id. Please try again later."
                     }
                 )
+        else:
+            logger.error(f"[{timestamp}]{func_name}: Unhandled error occured.")
+            return {
+                "error": "Unexpected behavior. Please contact the administrator and provide detailed steps that brought you to this point."
+            }
 
 
 def validate_registration_key(data):
+    func_name = validate_registration_key.__name__
+
     reg_key = data.get("reg_key")
 
     # Terminate the function early if the key does not exist
@@ -202,10 +247,24 @@ def validate_registration_key(data):
     gen_for = " ".join(gen_for_sanitized)
 
     if reg_key_object.key_expiry <= date_time_handler("date"):
+        timestamp = date_time_handler(format="timestamp")
+        logger.exception(
+            f"[{timestamp}]{func_name}: An expired key was attempted to be registered belonging to: {reg_key_object.generated_for}."
+        )
         reg_key_errors.append("Key already expired, please request a new key.")
 
     if reg_key_object.key_used:
+        timestamp = date_time_handler(format="timestamp")
+        logger.warning(
+            f"[{timestamp}]{func_name}: Someone attempted to register with a used key: {reg_key_object.generated_key}."
+        )
         reg_key_errors.append("Key already used.")
+
+    if reg_key_object.generated_for != gen_for:
+        logger.exception(
+            f"[{timestamp}]{func_name}: User attempted to use registration key {reg_key} for {gen_for}. If user complains please check the db for the key's owner."
+        )
+        return {"error": "Key is not intended for this person."}
 
     if (
         reg_key_object is not None
@@ -214,11 +273,9 @@ def validate_registration_key(data):
     ):
         reg_key_object.key_used = True
         reg_key_object.save()
-        return {
-            "success": True,
-        }
+        return 0
 
-    reg_key_errors.append("Invalid key.")
+    reg_key_errors.append("Registration error.")
     return {
         "error": " ".join(reg_key_errors),
     }

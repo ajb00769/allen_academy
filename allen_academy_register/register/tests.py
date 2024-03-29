@@ -1,3 +1,14 @@
-from django.test import TestCase
+from rest_framework.test import APIRequestFactory, APIClient
 
-# Create your tests here.
+
+class LogicTest(APIRequestFactory):
+    pass
+
+
+class RequestTest(APIClient):
+    pass
+
+
+# logical tests
+
+# client tests
