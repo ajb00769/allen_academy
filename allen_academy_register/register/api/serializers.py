@@ -13,7 +13,7 @@ from register.models import (
 
 class RegistrationKeySerializer(serializers.ModelSerializer):
     class Meta:
-        model = RegistrationKey 
+        model = RegistrationKey
         fields = "__all__"
 
 

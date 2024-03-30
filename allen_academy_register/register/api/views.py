@@ -82,55 +82,62 @@ def register(request):
     current_id_counts = AllAccountId.objects.all().count()
     new_account_id = generate_account_id(current_id_counts)
 
-    with transaction.atomic():
-        """
-        All operations that involve altering or inserting data into the db will be
-        placed within the scope of transaction.atomic to treat it as a single
-        transaction.
-        
-        The validate_registration_key function alters the key_used column of a key
-        making it unusable afterwards. If this is done outside of the scope of
-        transaction.atomic if the succeeding operations fail an account will not
-        be created but the registration key will become unusable.
-        """
-        validate_reg_key = validate_registration_key(for_reg_key_validation).get(
-            "error"
-        )
-        if validate_reg_key:
-            return Response({"error": validate_reg_key}, status=400)
+    try:
+        with transaction.atomic():
+            """
+            All operations that involve altering or inserting data into the db will be
+            placed within the scope of transaction.atomic to treat it as a single
+            transaction.
 
-        saved_account_id = save_account_id(account_id=new_account_id)
-        if isinstance(saved_account_id, dict):
-            return Response({"error": saved_account_id.get("error")}, status=400)
+            The validate_registration_key function alters the key_used column of a key
+            making it unusable afterwards. If this is done outside of the scope of
+            transaction.atomic if the succeeding operations fail an account will not
+            be created but the registration key will become unusable.
+            """
+            validate_reg_key = validate_registration_key(for_reg_key_validation)
+            if isinstance(validate_reg_key, dict):
+                raise Exception(validate_reg_key.get("error"))
 
-        # Get the id object from AllAccountId to plug into the OneToOne account_id field
-        all_account_id_object = AllAccountId.objects.get(generated_id=saved_account_id)
-        account_serializer_data = request.data.copy()
-        account_serializer_data.update(
-            {
-                "account_id": all_account_id_object.generated_id,
-                "password": make_password(account_serializer_data.get("password")),
-            }
-        )
-        account_serializer = account_serializer_class(data=account_serializer_data)
+            saved_account_id = save_account_id(account_id=new_account_id)
+            if isinstance(saved_account_id, dict):
+                raise Exception(saved_account_id.get("error"))
 
-        if not account_serializer.is_valid():
-            return Response(account_serializer.errors, status=400)
-        account_serializer.save()
+            # Get the id object from AllAccountId to plug into the OneToOne account_id field
+            all_account_id_object = AllAccountId.objects.get(
+                generated_id=saved_account_id
+            )
+            account_serializer_data = request.data.copy()
+            account_serializer_data.update(
+                {
+                    "account_id": all_account_id_object.generated_id,
+                    "password": make_password(account_serializer_data.get("password")),
+                }
+            )
+            account_serializer = account_serializer_class(data=account_serializer_data)
 
-        # Populate the AccountDetail table
-        account_object = account_class.objects.get(
-            account_id=account_serializer.data.get("account_id")
-        )
-        detail_serializer_data = request.data.copy()
-        detail_serializer_data.update({"account_id": account_object.account_id})
-        detail_serializer = detail_serializer_class(data=detail_serializer_data)
+            if not account_serializer.is_valid():
+                raise Exception(account_serializer.errors)
+                # return Response(account_serializer.errors, status=400)
+            account_serializer.save()
 
-        if not detail_serializer.is_valid():
-            return Response(detail_serializer.errors, status=400)
-        detail_serializer.save()
+            # Populate the AccountDetail table
+            account_object = account_class.objects.get(
+                account_id=account_serializer.data.get("account_id")
+            )
+            detail_serializer_data = request.data.copy()
+            detail_serializer_data.update({"account_id": account_object.account_id})
+            detail_serializer = detail_serializer_class(data=detail_serializer_data)
 
-        return Response({"result": True}, status=201)
+            if not detail_serializer.is_valid():
+                raise Exception(detail_serializer.errors)
+            detail_serializer.save()
+
+            return Response({"success": True}, status=201)
+    except Exception as e:
+        if isinstance(e.args[0], dict):
+            err_key = next(iter(e.args[0]))
+            return Response({"error": e.args[0].get(err_key)[0]}, status=400)
+        return Response({"error": str(type(e))}, status=400)
 
 
 @api_view(["POST"])
@@ -138,6 +145,7 @@ def reg_key(request):
     func_name = reg_key.__name__
 
     client_data = request.data.copy()
+    client_data.pop("key_used", None)
 
     try:
         new_key = generate_registration_key()
@@ -164,10 +172,11 @@ def reg_key(request):
     except Exception as e:
         timestamp = date_time_handler(format="timestamp")
         logger.exception(
-            f"[{timestamp}]{func_name}: An error occured while creating the registration key. {e}"
+            f"[{timestamp}]{func_name}: An unexpected error occured while creating the registration key. {e}"
         )
         return Response(
-            {"error": "An error occured while creating the registratoin key."}
+            {"error": "An error occured while creating the registration key."},
+            status=400,
         )
 
 
@@ -220,6 +229,7 @@ def save_account_id(account_id, max_retries=3):
                     }
                 )
         else:
+            timestamp = date_time_handler(format="timestamp")
             logger.error(f"[{timestamp}]{func_name}: Unhandled error occured.")
             return {
                 "error": "Unexpected behavior. Please contact the administrator and provide detailed steps that brought you to this point."
@@ -261,6 +271,7 @@ def validate_registration_key(data):
         reg_key_errors.append("Key already used.")
 
     if reg_key_object.generated_for != gen_for:
+        timestamp = date_time_handler(format="timestamp")
         logger.exception(
             f"[{timestamp}]{func_name}: User attempted to use registration key {reg_key} for {gen_for}. If user complains please check the db for the key's owner."
         )
