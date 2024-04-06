@@ -3,3 +3,4 @@
 **/env
 **/dockerlogs.log
 **/*_api_logs.log
+**/*.log
