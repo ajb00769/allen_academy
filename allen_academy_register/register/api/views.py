@@ -27,7 +27,7 @@ from ..models import (
 )
 from ..errors import (
     NULL_ARGS_ERROR,
-    INVALID_KEY_TYPE_ERROR,
+    INVALID_ARGS_ERROR,
     UNEXPECTED_ERROR,
 )
 import logging
@@ -77,7 +77,7 @@ def register(request):
     if key_type not in serializer_map:
         timestamp = date_time_handler(format="timestamp")
         logger.warning(f"[{timestamp}]{func_name}: Invalid key type was passed.")
-        return Response(INVALID_KEY_TYPE_ERROR, status=400)
+        return Response(INVALID_ARGS_ERROR, status=400)
 
     gen_for_sanitized = [i for i in gen_for if i]
     gen_for_str = " ".join(gen_for_sanitized)
@@ -147,13 +147,7 @@ def register(request):
 
             return Response({"success": True}, status=201)
     except Exception as e:
-        if isinstance(e.args[0], dict):
-            err_key = next(iter(e.args[0]))
-            return Response({"error": e.args[0].get(err_key)[0]}, status=400)
-
-        timestamp = date_time_handler(format="timestamp")
-        logger.error(f"[{timestamp}]{func_name}: {e}")
-        return Response(UNEXPECTED_ERROR, status=400)
+        return handle_exception(e)
 
 
 @api_view(["POST"])
@@ -197,13 +191,7 @@ def reg_key(request):
                 return Response(new_key_serializer.data, status=201)
             raise Exception(new_key_serializer.errors)
     except Exception as e:
-        if isinstance(e.args[0], dict):
-            err_key = next(iter(e.args[0]))
-            return Response({"error": e.args[0].get(err_key)[0]}, status=400)
-
-        timestamp = date_time_handler(format="timestamp")
-        logger.error(f"[{timestamp}]{func_name}: {e}")
-        return Response(UNEXPECTED_ERROR, status=400)
+        return handle_exception(e)
 
 
 #########################################################################
@@ -317,4 +305,13 @@ def validate_registration_key(data):
     }
 
 
-# TODO: Consistent error handling/error message response with error codes
+def handle_exception(e):
+    timestamp = date_time_handler(format="timestamp")
+    if isinstance(e.args[0], dict):
+        err_key = next(iter(e.args[0]))
+        logger.error(
+            f"[{timestamp}]{func_name}: Parameter {err_key}: {e.args[0].get(err_key)[0]}"
+        )
+        return Response(NULL_ARGS_ERROR, status=400)
+    logger.error(f"[{timestamp}]{func_name}: {e}")
+    return Response(UNEXPECTED_ERROR, status=400)

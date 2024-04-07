@@ -3,7 +3,7 @@
 null args:
 {}
 
-wrong key:
+wrong parameter name:
 {
 	"key_type": "STU",
 	"gen_for": "Harry Potter"
@@ -13,6 +13,12 @@ wrong args:
 {
 	"key_type": "123",
 	"generated_for": "123"
+}
+
+Invalid parameter values:
+{
+	"key_type": "123",
+	"generated_for": "Harry Potter"
 }
 
 manual key injection:
@@ -65,6 +71,10 @@ handling null values parameters in the registrant's name:
 	"first_name": "John",
 	"middle_name": "John",
 	"suffix": null
+}
+
+mismatching key type accounts:
+{
 }
 
 /* --------- VALID ---------*/

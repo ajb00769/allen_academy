@@ -9,8 +9,8 @@ NULL_ARGS_ERROR = {
     "error_code": "AAR-00001",
 }
 
-INVALID_KEY_TYPE_ERROR = {
-    "error": "Invalid key type. Contact the developer with the error code.",
+INVALID_ARGS_ERROR = {
+    "error": "Invalid arguments passed. Contact the developer with the error code.",
     "error_code": "AAR-00002",
 }
 
