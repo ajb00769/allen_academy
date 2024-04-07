@@ -1,0 +1,81 @@
+/*---------- REG_KEY ----------*/
+
+null args:
+{}
+
+wrong key:
+{
+	"key_type": "STU",
+	"gen_for": "Harry Potter"
+}
+
+wrong args:
+{
+	"key_type": "123",
+	"generated_for": "123"
+}
+
+manual key injection:
+{
+	"generated_key": "this-key-is-invalid",
+	"generated_for": "Harry Potter",
+	"key_type": "STU"
+}
+
+manual key_expiry injection:
+{
+	"generated_for": "Harry Potter",
+	"key_type": "STU",
+	"key_expiry": "2091-01-01"
+}
+
+manual key_used injection:
+{
+	"key_used": true,
+	"generated_for": "Harry Potter",
+	"key_type": "STU"
+}
+
+name too short:
+{
+	"generated_for": "Harry",
+	"key_type": "STU"
+}
+
+empty spaces:
+{
+	"key_type": "STU",
+	"generated_for": "Harry Potter "
+}
+
+/*---------- REGISTER ----------*/
+
+empty space after each string:
+{
+	"last_name": "John",
+	"first_name": "John",
+	"middle_name": "John",
+	"suffix: " "
+}
+
+handling null values parameters in the registrant's name:
+
+{
+	"last_name": "John",
+	"first_name": "John",
+	"middle_name": "John",
+	"suffix": null
+}
+
+/* --------- VALID ---------*/
+
+{
+	"last_name": "Harry",
+	"first_name": "Potter",
+	"reg_key": "fbf5-c317-11e6-a764",
+	"key_type": "STU",
+	"password": "1234",
+	"email": "testemail@email.com",
+	"address": "test address",
+	"birthday": "1997-05-06"
+}

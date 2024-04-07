@@ -25,6 +25,11 @@ from ..models import (
     ParentAccount,
     EmployeeAccount,
 )
+from ..errors import (
+    NULL_ARGS_ERROR,
+    INVALID_KEY_TYPE_ERROR,
+    UNEXPECTED_ERROR,
+)
 import logging
 
 
@@ -55,23 +60,31 @@ def register(request):
 
     """
     Validate key_type before anything else, early program termination for
-    invalid key types. Valid key_type will then be assigned to a dict for
-    input validation into the db.
+    invalid or NULL key types. Valid key_type will then be assigned to a
+    dict for input validation into the db.
     """
     key_type = request.data.get("key_type")
+    gen_for = [
+        request.data.get("last_name"),
+        request.data.get("first_name"),
+        request.data.get("middle_name"),
+        request.data.get("suffix"),
+    ]
+
+    if not key_type or not gen_for:
+        return Response(NULL_ARGS_ERROR, status=400)
+
     if key_type not in serializer_map:
         timestamp = date_time_handler(format="timestamp")
         logger.warning(f"[{timestamp}]{func_name}: Invalid key type was passed.")
-        return Response({"error": "Invalid key type."}, status=400)
+        return Response(INVALID_KEY_TYPE_ERROR, status=400)
+
+    gen_for_sanitized = [i for i in gen_for if i]
+    gen_for_str = " ".join(gen_for_sanitized)
 
     for_reg_key_validation = {
         "reg_key": request.data.get("reg_key"),
-        "gen_for": [
-            request.data.get("last_name"),
-            request.data.get("first_name"),
-            request.data.get("middle_name"),
-            request.data.get("suffix"),
-        ],
+        "gen_for": gen_for_str,
         "key_type": key_type,
     }
 
@@ -96,11 +109,11 @@ def register(request):
             """
             validate_reg_key = validate_registration_key(for_reg_key_validation)
             if isinstance(validate_reg_key, dict):
-                raise Exception(validate_reg_key.get("error"))
+                return Response(validate_reg_key, status=400)
 
             saved_account_id = save_account_id(account_id=new_account_id)
             if isinstance(saved_account_id, dict):
-                raise Exception(saved_account_id.get("error"))
+                return Response(saved_account_id, status=400)
 
             # Get the id object from AllAccountId to plug into the OneToOne account_id field
             all_account_id_object = AllAccountId.objects.get(
@@ -137,7 +150,10 @@ def register(request):
         if isinstance(e.args[0], dict):
             err_key = next(iter(e.args[0]))
             return Response({"error": e.args[0].get(err_key)[0]}, status=400)
-        return Response({"error": str(type(e))}, status=400)
+
+        timestamp = date_time_handler(format="timestamp")
+        logger.error(f"[{timestamp}]{func_name}: {e}")
+        return Response(UNEXPECTED_ERROR, status=400)
 
 
 @api_view(["POST"])
@@ -146,6 +162,16 @@ def reg_key(request):
 
     client_data = request.data.copy()
     client_data.pop("key_used", None)
+
+    gen_for_raw = client_data.get("generated_for")
+
+    if not gen_for_raw or not client_data.get("key_type"):
+        return Response(NULL_ARGS_ERROR, status=400)
+
+    gen_for_sanitized = [i for i in gen_for_raw.split() if i]
+
+    if len(gen_for_sanitized) < 2:
+        return Response({"error": "Name too short."}, status=400)
 
     try:
         new_key = generate_registration_key()
@@ -159,6 +185,7 @@ def reg_key(request):
             {
                 "generated_key": new_key,
                 "key_expiry": date_time_handler(format="key_expiry"),
+                "generated_for": " ".join(gen_for_sanitized),
             }
         )
 
@@ -168,16 +195,15 @@ def reg_key(request):
             if new_key_serializer.is_valid():
                 new_key_serializer.save()
                 return Response(new_key_serializer.data, status=201)
-            return Response(new_key_serializer.errors, status=400)
+            raise Exception(new_key_serializer.errors)
     except Exception as e:
+        if isinstance(e.args[0], dict):
+            err_key = next(iter(e.args[0]))
+            return Response({"error": e.args[0].get(err_key)[0]}, status=400)
+
         timestamp = date_time_handler(format="timestamp")
-        logger.exception(
-            f"[{timestamp}]{func_name}: An unexpected error occured while creating the registration key. {e}"
-        )
-        return Response(
-            {"error": "An error occured while creating the registration key."},
-            status=400,
-        )
+        logger.error(f"[{timestamp}]{func_name}: {e}")
+        return Response(UNEXPECTED_ERROR, status=400)
 
 
 #########################################################################
@@ -230,9 +256,9 @@ def save_account_id(account_id, max_retries=3):
                 )
         else:
             timestamp = date_time_handler(format="timestamp")
-            logger.error(f"[{timestamp}]{func_name}: Unhandled error occured.")
+            logger.error(f"[{timestamp}]{func_name}: Unexpected error occured.")
             return {
-                "error": "Unexpected behavior. Please contact the administrator and provide detailed steps that brought you to this point."
+                "error": f"Unexpected behavior. Please contact the developer and provide detailed steps that brought you to this point with this timestamp: {timestamp}."
             }
 
 
@@ -252,9 +278,6 @@ def validate_registration_key(data):
         return {"error": "Key type is for a different account type."}
 
     reg_key_errors = []
-    # Sanitize None or empty string for suffix and middle name
-    gen_for_sanitized = [i for i in data.get("gen_for") if i]
-    gen_for = " ".join(gen_for_sanitized)
 
     if reg_key_object.key_expiry <= date_time_handler("date"):
         timestamp = date_time_handler(format="timestamp")
@@ -269,6 +292,8 @@ def validate_registration_key(data):
             f"[{timestamp}]{func_name}: Someone attempted to register with a used key: {reg_key_object.generated_key}."
         )
         reg_key_errors.append("Key already used.")
+
+    gen_for = data.get("gen_for")
 
     if reg_key_object.generated_for != gen_for:
         timestamp = date_time_handler(format="timestamp")
@@ -290,3 +315,6 @@ def validate_registration_key(data):
     return {
         "error": " ".join(reg_key_errors),
     }
+
+
+# TODO: Consistent error handling/error message response with error codes

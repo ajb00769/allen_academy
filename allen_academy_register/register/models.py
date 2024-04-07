@@ -112,7 +112,11 @@ class StudentDetail(models.Model):
         blank=False,
         null=False,
     )
-    middle_name = models.CharField(max_length=80, default=None)
+    middle_name = models.CharField(
+        max_length=80,
+        default=None,
+        null=True,
+    )
     suffix = models.CharField(
         choices=SUFFIX_CHOICES,
         max_length=3,
@@ -171,7 +175,11 @@ class EmployeeDetail(models.Model):
         blank=False,
         null=False,
     )
-    middle_name = models.CharField(max_length=80, default=None)
+    middle_name = models.CharField(
+        max_length=80,
+        default=None,
+        null=True,
+    )
     last_name = models.CharField(
         max_length=80,
         blank=False,
@@ -241,7 +249,11 @@ class ParentDetail(models.Model):
         blank=False,
         null=False,
     )
-    middle_name = models.CharField(max_length=80, default=None)
+    middle_name = models.CharField(
+        max_length=80,
+        default=None,
+        null=True,
+    )
     last_name = models.CharField(
         max_length=80,
         blank=False,
