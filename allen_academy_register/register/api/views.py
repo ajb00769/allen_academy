@@ -147,7 +147,7 @@ def register(request):
 
             return Response({"success": True}, status=201)
     except Exception as e:
-        return handle_exception(e)
+        return handle_exception(e, func_name=func_name)
 
 
 @api_view(["POST"])
@@ -191,7 +191,7 @@ def reg_key(request):
                 return Response(new_key_serializer.data, status=201)
             raise Exception(new_key_serializer.errors)
     except Exception as e:
-        return handle_exception(e)
+        return handle_exception(e, func_name=func_name)
 
 
 #########################################################################
@@ -305,7 +305,7 @@ def validate_registration_key(data):
     }
 
 
-def handle_exception(e):
+def handle_exception(e, func_name):
     timestamp = date_time_handler(format="timestamp")
     if isinstance(e.args[0], dict):
         err_key = next(iter(e.args[0]))
