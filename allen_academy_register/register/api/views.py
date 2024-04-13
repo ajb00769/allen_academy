@@ -65,10 +65,10 @@ def register(request):
     """
     key_type = request.data.get("key_type")
     gen_for = [
-        request.data.get("last_name"),
-        request.data.get("first_name"),
-        request.data.get("middle_name"),
-        request.data.get("suffix"),
+        clean_excess_spaces_from_string(request.data.get("last_name")),
+        clean_excess_spaces_from_string(request.data.get("first_name")),
+        clean_excess_spaces_from_string(request.data.get("middle_name")),
+        clean_excess_spaces_from_string(request.data.get("suffix")),
     ]
 
     if not key_type or not gen_for:
@@ -156,14 +156,12 @@ def reg_key(request):
     client_data = request.data.copy()
     client_data.pop("key_used", None)
 
-    gen_for_raw = client_data.get("generated_for")
+    gen_for = clean_excess_spaces_from_string(client_data.get("generated_for"))
 
-    if not gen_for_raw or not client_data.get("key_type"):
+    if not gen_for or not client_data.get("key_type"):
         return Response(NULL_ARGS_ERROR, status=400)
 
-    gen_for_sanitized = [i for i in gen_for_raw.split() if i]
-
-    if len(gen_for_sanitized) < 2:
+    if len(gen_for.split()) < 2:
         return Response({"error": "Name too short."}, status=400)
 
     try:
@@ -178,7 +176,7 @@ def reg_key(request):
             {
                 "generated_key": new_key,
                 "key_expiry": date_time_handler(format="key_expiry"),
-                "generated_for": " ".join(gen_for_sanitized),
+                "generated_for": gen_for,
             }
         )
 
@@ -321,3 +319,10 @@ def handle_exception(e, func_name):
         return Response(NULL_ARGS_ERROR, status=400)
     logger.error(f"[{timestamp}]{func_name}: {e}")
     return Response(UNEXPECTED_ERROR, status=400)
+
+
+def clean_excess_spaces_from_string(string):
+    if string is None:
+        return None
+    removed_spaces = [i for i in string.split() if i]
+    return " ".join(removed_spaces)

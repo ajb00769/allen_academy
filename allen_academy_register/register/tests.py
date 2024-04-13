@@ -122,8 +122,10 @@ class RegisterTests(APITestCase):
                 "phone": "+1800123456789",
             }
             if key_type == "PAR":
-                student = StudentDetail.objects.values("account_id").first()
-                data.update({"relationship": "R", "student": student.get("account_id")})
+                student = StudentDetail.objects.values_list(
+                    "account_id", flat=True
+                ).first()
+                data.update({"relationship": "R", "student": student})
             elif key_type == "EMP":
                 data.update({"employment_type": "S"})
 
