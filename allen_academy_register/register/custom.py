@@ -5,7 +5,7 @@ from django.core.validators import RegexValidator
 
 
 phone_validator = RegexValidator(
-    regex=r"^\+?\1?\d{8,15}$",
+    regex=r"^\+?\d{8,15}$",
     message="Phone number must follow the format '+99999999' between 8-15 digits long.",
 )
 

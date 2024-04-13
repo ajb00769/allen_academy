@@ -1,5 +1,5 @@
 from django.db import IntegrityError, transaction
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -130,7 +130,6 @@ def register(request):
 
             if not account_serializer.is_valid():
                 raise Exception(account_serializer.errors)
-                # return Response(account_serializer.errors, status=400)
             account_serializer.save()
 
             # Populate the AccountDetail table
@@ -198,7 +197,7 @@ def reg_key(request):
 #                   *** Helper Functions Section ***                    #
 # /*-----------------------------------------------------------------*\ #
 # I have decided to just add some of these functions within the same    #
-# file because of their clos-relationship with the views. Also, these   #
+# file because of their close-relationship with the views. Also, these  #
 # functions use the same imports as the views and I wouldn't want to    #
 # re-import the same items in the custom.py file again.                 #
 #########################################################################
@@ -251,6 +250,13 @@ def save_account_id(account_id, max_retries=3):
 
 
 def validate_registration_key(data):
+    """
+    No other exceptions expected to happen in this helper function since the only
+    point of failure would be getting a null reg_key_object if they reg_key argument
+    does not exist in the db.
+
+    The rest of the operations involve comparing data fetched from the db vs input.
+    """
     func_name = validate_registration_key.__name__
 
     reg_key = data.get("reg_key")
@@ -258,7 +264,7 @@ def validate_registration_key(data):
     # Terminate the function early if the key does not exist
     try:
         reg_key_object = RegistrationKey.objects.get(generated_key=reg_key)
-    except ObjectDoesNotExist:
+    except RegistrationKey.DoesNotExist:
         return {"error": "Invalid key."}
 
     # Terminate the function early if key is for another account type
