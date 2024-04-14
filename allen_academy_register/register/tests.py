@@ -1,8 +1,29 @@
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework.test import APITestCase
-from .custom import phone_validator
-from .models import StudentDetail
+from register.api.views import validate_registration_key, save_account_id
+from .custom import phone_validator, generate_account_id
+from .models import StudentDetail, AllAccountId
+
+
+class PhoneNumberValidationTests(APITestCase):
+    def setUp(self):
+        self.phone_validator = phone_validator
+
+    def test_valid_phone_number(self):
+        try:
+            self.phone_validator("+12345678")
+            self.phone_validator("+123456789098765")
+        except ValidationError:
+            self.fail("Valid phone number raised a ValidationError")
+
+    def test_invalid_phone_number(self):
+        with self.assertRaises(ValidationError):
+            self.phone_validator("+1")
+            self.phone_validator("+1234567")
+            self.phone_validator("+1234567890987654")
+            self.phone_validator("Hello, world!")
 
 
 class RegKeyTests(APITestCase):
@@ -66,6 +87,22 @@ class RegKeyTests(APITestCase):
         self.assertIn("error", response.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_name_too_long(self):
+        data = self.create_data(generated_for=self.generated_for_invalid_too_long)
+        response = self.client.post(self.url, data, format="json")
+        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_shortest_valid_name(self):
+        data = self.create_data(generated_for=self.generated_for_minimum)
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_longest_valid_name(self):
+        data = self.create_data(generated_for=self.generated_for_maximum)
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_name_with_excess_spaces(self):
         data = self.create_data(generated_for=self.generated_for_spaces)
         response = self.client.post(self.url, data, format="json")
@@ -97,111 +134,258 @@ class RegKeyTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
+class HelperFunctionTests(APITestCase):
+    def setUp(self):
+        self.url = reverse("reg_key")
+        self.default_generated_for = "Potter Harry"
+        self.default_key_type = "STU"
+
+    def create_key(self, key_type=None, generated_for=None):
+        data = {
+            "key_type": key_type or self.default_key_type,
+            "generated_for": generated_for or self.default_generated_for,
+        }
+        response = self.client.post(self.url, data, format="json")
+        return response.data
+
+    def test_validate_registration_key_valid(self):
+        args = self.create_key()
+        data = {
+            "reg_key": args.get("generated_key"),
+            "key_type": args.get("key_type"),
+            "gen_for": self.default_generated_for,
+        }
+        result = validate_registration_key(data)
+        self.assertEqual(result, 0)
+
+    def test_validate_registration_key_invalid_key_type(self):
+        args = self.create_key()
+        data = {
+            "reg_key": args.get("generated_key"),
+            "key_type": "XX",
+            "gen_for": self.default_generated_for,
+        }
+        result = validate_registration_key(data)
+        self.assertIn("error", result)
+
+    def test_validate_registration_key_mismatch_key_type(self):
+        args = self.create_key()
+        data = {
+            "reg_key": args.get("generated_key"),
+            "key_type": "EMP",
+            "gen_for": self.default_generated_for,
+        }
+        result = validate_registration_key(data)
+        self.assertIn("error", result)
+
+    def test_validate_registration_key_invalid_reg_key(self):
+        args = self.create_key()
+        data = {
+            "reg_key": "this is invalid",
+            "key_type": args.get("key_type"),
+            "gen_for": self.default_generated_for,
+        }
+        result = validate_registration_key(data)
+        self.assertIn("error", result)
+
+    def test_validate_registration_key_invalid_gen_for(self):
+        args = self.create_key()
+        data = {
+            "reg_key": args.get("generated_key"),
+            "key_type": args.get("key_type"),
+            "gen_for": "this is invalid",
+        }
+        result = validate_registration_key(data)
+        self.assertIn("error", result)
+
+    def test_save_account_id_valid(self):
+        result = save_account_id(generate_account_id(0))
+        self.assertEqual(
+            result, AllAccountId.objects.values_list("generated_id", flat=True).first()
+        )
+
+
 class RegisterTests(APITestCase):
-    def generate_args(self, key_type, gen_for):
+    def setUp(self):
+        self.url = reverse("register")
+        self.default_data = {
+            "last_name": "Potter",
+            "first_name": "Harry",
+            "password": "1234",
+            "email": "testemail@email.com",
+            "address": "test address",
+            "birthday": "1997-05-06",
+            "phone": "+1800123456789",
+        }
+        self.default_generated_for = "Potter Harry"
+        self.default_key_type = "STU"
+        self.all_key_types = ["STU", "PAR", "EMP"]
+
+    def generate_args(self, key_type=None, generated_for=None):
         url = reverse("reg_key")
-        data = {"key_type": key_type, "generated_for": gen_for}
+        data = {
+            "key_type": key_type or self.default_key_type,
+            "generated_for": generated_for or self.default_generated_for,
+        }
         return self.client.post(url, data, format="json")
 
     def test_valid_registration_minimum(self):
-        url = reverse("register")
-        key_types = ["STU", "PAR", "EMP"]
+        for key_type in self.all_key_types:
+            with self.subTest():
+                args = self.generate_args(key_type)
+                dict_args = {
+                    "reg_key": args.data.get("generated_key"),
+                    "key_type": args.data.get("key_type"),
+                }
+                data = self.default_data.copy()
+                data.update(dict_args)
+                if key_type == "PAR":
+                    student = StudentDetail.objects.values_list(
+                        "account_id", flat=True
+                    ).first()
+                    data.update({"relationship": "R", "student": student})
+                elif key_type == "EMP":
+                    data.update({"employment_type": "S"})
 
-        for key_type in key_types:
-            args = self.generate_args(key_type, "Potter Harry")
-            data = {
-                "last_name": "Potter",
-                "first_name": "Harry",
-                "reg_key": args.data.get("generated_key"),
-                "key_type": args.data.get("key_type"),
-                "password": "1234",
-                "email": "testemail@email.com",
-                "address": "test address",
-                "birthday": "1997-05-06",
-                "phone": "+1800123456789",
-            }
-            if key_type == "PAR":
-                student = StudentDetail.objects.values_list(
-                    "account_id", flat=True
-                ).first()
-                data.update({"relationship": "R", "student": student})
-            elif key_type == "EMP":
-                data.update({"employment_type": "S"})
-
-            response = self.client.post(url, data, format="json")
-            self.assertEqual(response.data.get("success"), True)
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                response = self.client.post(self.url, data, format="json")
+                self.assertEqual(response.data.get("success"), True)
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_null_registration_args(self):
-        url = reverse("register")
         data = {}
-        response = self.client.post(url, data, format="json")
+        response = self.client.post(self.url, data, format="json")
         self.assertIn("error", response.data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_super_long_name(self):
-        args = self.generate_args("STU", "Dela Cruz Juan Karlos Miguel Marquez JR")
-        url = reverse("register")
-        data = {
+        args = self.generate_args(
+            generated_for="Dela Cruz Juan Karlos Miguel Marquez JR"
+        )
+        dict_args = {
             "last_name": "Dela Cruz",
             "first_name": "Juan Karlos",
             "middle_name": "Miguel Marquez",
             "suffix": "JR",
             "reg_key": args.data.get("generated_key"),
             "key_type": args.data.get("key_type"),
-            "password": "1234",
-            "email": "testemail@email.com",
-            "address": "test address",
-            "birthday": "1997-05-06",
         }
-        response = self.client.post(url, data, format="json")
+        data = self.default_data.copy()
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.data.get("success"), True)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_missing_phone_number(self):
-        args = self.generate_args("PAR", "Potter Harry James")
-        url = reverse("register")
-        data = {
-            "last_name": "Dela Cruz",
-            "first_name": "Juan Karlos",
-            "middle_name": "Miguel Marquez",
-            "suffix": "JR",
-            "reg_key": args.data.get("generated_key"),
-            "key_type": args.data.get("key_type"),
-            "password": "1234",
-            "email": "testemail@email.com",
-            "address": "test address",
-            "birthday": "1997-05-06",
-        }
+        for key_type in self.all_key_types:
+            with self.subTest():
+                args = self.generate_args(key_type=key_type)
+                dict_args = {
+                    "reg_key": args.data.get("generated_key"),
+                    "key_type": args.data.get("key_type"),
+                }
+                data = self.default_data.copy()
+                data.pop("phone")
+                data.update(dict_args)
+                response = self.client.post(self.url, data, format="json")
+                if key_type != "STU":
+                    self.assertIn("error", response.data)
+                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                else:
+                    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_missing_address(self):
-        pass
+        args = self.generate_args()
+        dict_args = {
+            "reg_key": args.data.get("generated_key"),
+            "key_type": args.data.get("key_type"),
+        }
+        data = self.default_data.copy()
+        data.pop("address")
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
+        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_missing_reg_key(self):
-        pass
+        args = self.generate_args()
+        dict_args = {"key_type": args.data.get("key_type")}
+        data = self.default_data.copy()
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
+        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_missing_key_type(self):
+        args = self.generate_args()
+        dict_args = {"reg_key": args.data.get("generated_key")}
+        data = self.default_data.copy()
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
+        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_invalid_reg_key(self):
-        pass
+        args = self.generate_args()
+        dict_args = {
+            "reg_key": "this-key-is-invalid",
+            "key_type": args.data.get("key_type"),
+        }
+        data = self.default_data.copy()
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
+        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_invalid_key_type(self):
+        args = self.generate_args()
+        dict_args = {"reg_key": args.data.get("generated_key"), "key_type": "QQQ"}
+        data = self.default_data.copy()
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
+        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_invalid_suffix(self):
-        pass
+        args = self.generate_args(generated_for="Potter Harry XX")
+        dict_args = {
+            "reg_key": args.data.get("generated_key"),
+            "key_type": args.data.get("key_type"),
+            "suffix": "XX",
+        }
+        data = self.default_data.copy()
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
+        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_invalid_emp_type(self):
-        pass
+        args = self.generate_args(key_type="EMP")
+        dict_args = {
+            "reg_key": args.data.get("generated_key"),
+            "key_type": args.data.get("key_type"),
+            "employment_type": "this is an invalid choice",
+        }
+        data = self.default_data.copy()
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
+        self.assertIn("error", response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-
-class HelperFunctionTests(APITestCase):
-    def test_string_sanitizer(self):
-        pass
-
-    def test_get_age_function(self):
-        pass
-
-    def test_validate_registration_key(self):
-        pass
-
-    def test_save_account_id(self):
-        pass
+    def test_taken_email(self):
+        for attempt in range(2):
+            args = self.generate_args()
+            dict_args = {
+                "reg_key": args.data.get("generated_key"),
+                "key_type": args.data.get("key_type"),
+            }
+            data = self.default_data.copy()
+            data.update(dict_args)
+            response = self.client.post(self.url, data, format="json")
+            if attempt + 1 == 2:
+                self.assertIn("error", response.data)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 if __name__ == "__main__":

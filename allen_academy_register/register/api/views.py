@@ -79,7 +79,7 @@ def register(request):
         logger.warning(f"[{timestamp}]{func_name}: Invalid key type was passed.")
         return Response(INVALID_ARGS_ERROR, status=400)
 
-    # sanitize input in case middle_name or suffix is null to prevent NoneType error
+    # sanitize input in case middle_name or suffix is null for null safety
     gen_for_sanitized = [i for i in gen_for if i]
     gen_for_str = " ".join(gen_for_sanitized)
 
@@ -92,9 +92,7 @@ def register(request):
     account_serializer_class, detail_serializer_class = serializer_map[key_type]
     account_class = model_map[key_type]
 
-    # Get the initial counts and generate the initial account id
-    current_id_counts = AllAccountId.objects.all().count()
-    new_account_id = generate_account_id(current_id_counts)
+    new_account_id = generate_account_id(get_current_account_id_counts())
 
     try:
         with transaction.atomic():
@@ -211,11 +209,7 @@ def save_account_id(account_id, max_retries=3):
         try:
             with transaction.atomic():
                 if attempt > 0:
-                    current_year = date_time_handler(format="year")
-                    current_id_counts = AllAccountId.objects.filter(
-                        generated_id__startswith=current_year
-                    ).count()
-                    account_id = generate_account_id(current_id_counts)
+                    account_id = generate_account_id(get_current_account_id_counts())
 
                 if isinstance(account_id, dict):
                     account_id_err_msg = account_id.get("error")
@@ -327,3 +321,8 @@ def clean_excess_spaces_from_string(string):
         return None
     removed_spaces = [i for i in string.split() if i]
     return " ".join(removed_spaces)
+
+
+def get_current_account_id_counts():
+    current_year = date_time_handler(format="year")
+    return AllAccountId.objects.filter(generated_id__startswith=current_year).count()
