@@ -79,6 +79,7 @@ def register(request):
         logger.warning(f"[{timestamp}]{func_name}: Invalid key type was passed.")
         return Response(INVALID_ARGS_ERROR, status=400)
 
+    # sanitize input in case middle_name or suffix is null to prevent NoneType error
     gen_for_sanitized = [i for i in gen_for if i]
     gen_for_str = " ".join(gen_for_sanitized)
 

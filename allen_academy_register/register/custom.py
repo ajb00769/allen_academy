@@ -46,3 +46,15 @@ def generate_account_id(all_account_id_counts):
 def generate_registration_key():
     token = token_hex(8)
     return "-".join(token[i : i + 4] for i in range(0, len(token), 4))
+
+
+def get_age(birthday):
+    """
+    birthday parameter must follow the format "YYYY-MM-DD", for example "2024-12-31".
+    Added if i to the list comprehension just in case a extra dashes or spaces are
+    passed in as arguments.
+    """
+    bday_str_to_int = [int(i) for i in birthday.split("-") if i]
+    bday_date_obj = date(*bday_str_to_int)
+    delta = relativedelta(date.today(), bday_date_obj)
+    return delta.years

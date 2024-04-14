@@ -123,7 +123,6 @@ class StudentDetail(models.Model):
         null=True,
     )
     birthday = models.DateField(blank=False, null=False)
-    # TODO: input validation should not be too young/unreasonably young
     address = models.CharField(
         max_length=255,
         blank=False,
@@ -290,6 +289,3 @@ class ParentDetail(models.Model):
         blank=False,
         null=False,
     )
-
-
-# TODO: Future Enhancement - create a db trigger to purge used reg keys
