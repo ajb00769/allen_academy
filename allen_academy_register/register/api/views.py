@@ -63,13 +63,14 @@ def register(request):
     invalid or NULL key types. Valid key_type will then be assigned to a
     dict for input validation into the db.
     """
-    key_type = request.data.get("key_type")
-    gen_for = [
+    gen_for_list = [
         clean_excess_spaces_from_string(request.data.get("last_name")),
         clean_excess_spaces_from_string(request.data.get("first_name")),
         clean_excess_spaces_from_string(request.data.get("middle_name")),
         clean_excess_spaces_from_string(request.data.get("suffix")),
-    ]
+    ]  # sanitize input in case middle_name or suffix is null for null safety
+    gen_for = remove_nulls_and_empty_strings(gen_for_list)
+    key_type = request.data.get("key_type")
 
     if not key_type or not gen_for:
         return Response(NULL_ARGS_ERROR, status=400)
@@ -79,13 +80,11 @@ def register(request):
         logger.warning(f"[{timestamp}]{func_name}: Invalid key type was passed.")
         return Response(INVALID_ARGS_ERROR, status=400)
 
-    # sanitize input in case middle_name or suffix is null for null safety
-    gen_for_sanitized = [i for i in gen_for if i]
-    gen_for_str = " ".join(gen_for_sanitized)
+    # declare all variables to be used in the transaction
 
     for_reg_key_validation = {
         "reg_key": request.data.get("reg_key"),
-        "gen_for": gen_for_str,
+        "gen_for": gen_for,
         "key_type": key_type,
     }
 
@@ -114,14 +113,10 @@ def register(request):
             if isinstance(saved_account_id, dict):
                 return Response(saved_account_id, status=400)
 
-            # Get the id object from AllAccountId to plug into the OneToOne account_id field
-            all_account_id_object = AllAccountId.objects.get(
-                generated_id=saved_account_id
-            )
             account_serializer_data = request.data.copy()
             account_serializer_data.update(
                 {
-                    "account_id": all_account_id_object.generated_id,
+                    "account_id": saved_account_id,
                     "password": make_password(account_serializer_data.get("password")),
                 }
             )
@@ -321,6 +316,10 @@ def clean_excess_spaces_from_string(string):
         return None
     removed_spaces = [i for i in string.split() if i]
     return " ".join(removed_spaces)
+
+
+def remove_nulls_and_empty_strings(input: list) -> str:
+    return " ".join([i for i in input if i])
 
 
 def get_current_account_id_counts():
