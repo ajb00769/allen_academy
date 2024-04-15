@@ -195,7 +195,11 @@ def reg_key(request):
 #########################################################################
 
 
-def save_account_id(account_id, max_retries=3):
+def save_account_id(account_id: str, max_retries=3) -> dict | str:
+    """
+    Returns a str with the account_id if saving is successful, otherwise
+    returns a dict with an "error" key.
+    """
     func_name = save_account_id.__name__
 
     account_id_serializer = AccountIdSerializer(data={"generated_id": account_id})
@@ -237,13 +241,14 @@ def save_account_id(account_id, max_retries=3):
             }
 
 
-def validate_registration_key(data):
+def validate_registration_key(data: dict) -> dict | int:
     """
     No other exceptions expected to happen in this helper function since the only
     point of failure would be getting a null reg_key_object if they reg_key argument
     does not exist in the db.
 
     The rest of the operations involve comparing data fetched from the db vs input.
+    Returns an int = 0 if successful, returns a dict with and "error" key if not.
     """
     func_name = validate_registration_key.__name__
 
@@ -299,7 +304,7 @@ def validate_registration_key(data):
     }
 
 
-def handle_exception(e, func_name):
+def handle_exception(e: Exception, func_name: str) -> Response:
     timestamp = date_time_handler(format="timestamp")
     if isinstance(e.args[0], dict):
         err_key = next(iter(e.args[0]))
@@ -311,7 +316,11 @@ def handle_exception(e, func_name):
     return Response(UNEXPECTED_ERROR, status=400)
 
 
-def clean_excess_spaces_from_string(string):
+def clean_excess_spaces_from_string(string: str | None) -> str:
+    """
+    Includes a None type as an input parameter since some of the inputs are
+    optional in the data model.
+    """
     if string is None:
         return None
     removed_spaces = [i for i in string.split() if i]
