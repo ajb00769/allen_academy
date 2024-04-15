@@ -48,35 +48,35 @@ As my passion for programming grew, I sought a career pivot that would allow me 
 ## Core Design Principles
 
 This application is built on a robust foundation of core design principles that ensure scalability, maintainability, and efficiency. These principles guide the architecture and development practices used, ensuring that the system is both powerful and adaptable to future needs.
-##### Decoupled Services and Service Oriented Architecture
+### Decoupled Services and Service Oriented Architecture
 
 At the heart of the design is the adoption of a Decoupled Services and Service Oriented Architecture (SOA). This approach allows us to build and scale services independently, enabling us to update, deploy, and scale services without affecting the entire system. This architecture is particularly beneficial in a microservices architecture, where each service can be developed, deployed, and scaled independently.
 
-##### REST API Architecture
+### REST API Architecture
 
 The REST API architecture is a cornerstone of this project, leveraging Django REST Framework for creating a powerful and flexible API. This framework provides a set of tools and features that simplify the development of RESTful APIs, including authentication, permissions, throttling, caching, filtering, pagination, and versioning. The use of Django REST Framework ensures that the API is both secure and efficient, supporting a wide range of data operations and interactions between the frontend and backend components.
 
-##### Selective Database Denormalization and Triggers
+### Selective Database Denormalization and Triggers
 
 I employed Selective Database Denormalization to optimize read performance by reducing the number of joins required to retrieve data. This strategy is complemented by the use of Triggers to maintain data integrity and consistency across the database. Triggers ensure that any changes made to the data are automatically reflected across related tables, reducing the risk of data inconsistency.
 
-##### Scalability and Dynamic Scaling of Services
+### Scalability and Dynamic Scaling of Services
 
 The system is designed with Scalability in mind, allowing it to handle increased loads efficiently through Docker and Kubernetes. The use of these technologies ensures Dynamic Scaling of services to automatically adjust resources based on demand, ensuring that the application remains responsive and available even under heavy load. This approach is crucial for maintaining high performance and user satisfaction.
 
-##### Stream and Batch Processing
+### Stream and Batch Processing
 
 This application support both Stream and Batch Processing to handle data efficiently. Stream processing is used for real-time data processing, allowing us to react to events as they occur. Batch processing, on the other hand, is used for processing large volumes of data at scheduled intervals via a job scheduler, optimizing resource usage and reducing processing time.
 
-##### Modularity, Reusability, and Abstraction
+### Modularity, Reusability, and Abstraction
 
-The codebase is designed with Modularity, Reusability, and Abstraction in mind. This approach allows us to create components that are independent, reusable, and abstracted from the underlying implementation details. This modular design makes the codebase easier to maintain, extend, and understand.
+The codebase is designed with Modularity, Reusability, and Abstraction in mind in the context of functions in functional programming. This approach allows us to create components that are independent, reusable, and abstracted from the underlying implementation details. This modular design makes the codebase easier to maintain, extend, and understand.
 
-##### Single Responsibility Principle
+### Single Responsibility Principle
 
 This piece of software adheres to the Single Responsibility Principle (SRP), ensuring that each component or module in the system has a single responsibility. This principle helps in maintaining a clean and organized codebase, making it easier to manage and extend our application and conforms to decoupling of services.
 
-##### Integrity-first - Redundant Data Validation
+### Integrity-first - Redundant Data Validation
 
 To ensure data integrity, Redundant Data Validation was implemented between the database and the backend code. This approach involves validating data at multiple points in the data processing pipeline, including at the database level and in the application code. This redundancy helps in catching and correcting errors early in the process, reducing the risk of data corruption.
 
@@ -102,12 +102,14 @@ Additionally, I have a preference for open-source solutions because they offer s
 
 ### Docker
 
+I chose Docker for my project due to its ability to create and manage individual containers, which allows for the packaging of applications and their dependencies into separate containers and running them. Docker containers are lightweight and efficient, leveraging the host system’s resources and avoiding the need to duplicate an entire operating system like virtual machines do.
+
+Also, with Docker, scaling up and down is easier because you can simply create a new container with the base image when needed. This approach allows for rapid scaling of applications, as containers can be spun up or down quickly to match the current traffic.
 
 
 ## Planning, Design, and Architecture
 
 With the improvement of internet connectivity and reliability in recent years compared to how it was in the early 90s and 2000s where you'd be lucky enough to have a 1 mbps connection, architectural concepts such as Service Oriented Architecture (SOA) have become more feasible than ever before. An advantage of SOA for this project is that we can dynamically scale each individual service depending on the traffic.
-
 
 ### Major School Management Activities
 1. Staffing
@@ -189,7 +191,7 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 ## `Register Service`
 
 
-##### `RegistrationKey`
+### `RegistrationKey`
 | Column Name      | Data Type   | Nullable | Description                        |
 | ---------------- | ----------- | -------- | ---------------------------------- |
 | `generated_key^` | `CHAR(19)`  | N        | **UNIQUE**, Primary key            |
@@ -198,12 +200,12 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `key_expiry`     | `DATE`      | N        | Expiry date of the key             |
 | `key_used`       | `BOOL`      | N        | Indicates if the key has been used |
 
-##### `AllAccountId`
+### `AllAccountId`
 | Column Name     | Data Type | Nullable | Description             |
 | --------------- | --------- | -------- | ----------------------- |
 | `generated_id^` | `CHAR(9)` | N        | **UNIQUE**, Primary key |
 
-##### `StudentAccount`
+### `StudentAccount`
 | Column Name   | Data Type     | Nullable | Description                                                                  |
 | ------------- | ------------- | -------- | ---------------------------------------------------------------------------- |
 | `account_id^` | `CHAR(9)`     | N        | **UNIQUE**, Primary key, Foreign key referencing `AllAccountId.generated_id` |
@@ -211,7 +213,7 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `password`    | `BINARY(255)` | N        | Binary field for storing password                                            |
 | `allow_login` | `BOOL`        | N        | Indicates if the student account is allowed to log in                        |
 
-##### `StudentDetail`
+### `StudentDetail`
 | Column Name   | Data Type   | Nullable | Description                                                                  |
 | ------------- | ----------- | -------- | ---------------------------------------------------------------------------- |
 | `account_id^` | `CHAR(9)`   | N        | **UNIQUE**, Primary key, Foreign key referencing `StudentAccount.account_id` |
@@ -224,7 +226,7 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `phone`       | `CHAR(16)`  | Y        | Student's phone number                                                       |
 | `status`      | `CHAR(1)`   | N        | Student's account status                                                     |
 
-##### `EmployeeAccount`
+### `EmployeeAccount`
 | Column Name       | Data Type       | Nullable | Description                                                                                          |
 | ----------------- | --------------- | -------- | ---------------------------------------------------------------------------------------------------- |
 | `account_id^`     | `CHAR(9)`       | N        | **UNIQUE**, Primary key, Foreign key referencing `AllAccountId.generated_id`                          |
@@ -232,7 +234,7 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `password`        | `BINARY(255)`   | N        | Binary field for storing password                                                                     |
 | `allow_login`     | `BOOL`          | N        | Indicates if the employee account is allowed to log in                                                |
 
-##### `EmployeeDetail`
+### `EmployeeDetail`
 | Column Name       | Data Type       | Nullable | Description                                                                                          |
 | ----------------- | --------------- | -------- | ---------------------------------------------------------------------------------------------------- |
 | `account_id^`     | `CHAR(9)`       | N        | **UNIQUE**, Primary key, Foreign key referencing `EmployeeAccount.account_id`                         |
@@ -246,7 +248,7 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `employment_type` | `CHAR(1)`       | N        | Employee's employment type                                                                            |
 | `status`          | `CHAR(1)`       | N        | Employee's account status                                                                             |
 
-##### `ParentAccount`
+### `ParentAccount`
 | Column Name   | Data Type     | Nullable | Description                                                                  |
 | ------------- | ------------- | -------- | ---------------------------------------------------------------------------- |
 | `account_id^` | `CHAR(9)`     | N        | **UNIQUE**, Primary key, Foreign key referencing `AllAccountId.generated_id` |
@@ -254,7 +256,7 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `password`    | `BINARY(255)` | N        | Binary field for storing password                                            |
 | `allow_login` | `BOOL`        | N        | Indicates if the parent account is allowed to log in                         |
 
-##### `ParentDetail`
+### `ParentDetail`
 | Column Name    | Data Type   | Nullable | Description                                                                 |
 | -------------- | ----------- | -------- | --------------------------------------------------------------------------- |
 | `account_id^`  | `CHAR(9)`   | N        | **UNIQUE**, Primary key, Foreign key referencing `ParentAccount.account_id` |
@@ -269,7 +271,7 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `student`      | `CHAR(9)`   | N        | Foreign key referencing `StudentDetail.account_id`                          |
 
 ------------- everything below is for other services/for future editing --------------
-##### `DEPARTMENTS`
+### `DEPARTMENTS`
 
 A table that contains all school departments. It is self-referencing in the context of parent-child department relationships.
 
@@ -280,7 +282,7 @@ A table that contains all school departments. It is self-referencing in the cont
 | `DEPT_NAME`    | `NVARCHAR(120)` | N        | **UNIQUE** to prevent potential duplicate department name creation. Fully spelled out name of the department.                      |
 | `DEPT_HEAD^`   | `INT`           | N        | FK `EMPLOYEE_ID`                                                                                                                   |
 
-##### `SALARY`
+### `SALARY`
 Salary is the monthly wage.
 
 | Column Name | Data Type | Nullable | Description |
@@ -292,14 +294,14 @@ Salary is the monthly wage.
 | `CHANGED_BY^` | `INT` | N | FK `EMPLOYEE_ID` |
 | `CHANGE_DATE` | `INT` | N |  |
 
-##### `EMPLOYEE_ATTENDANCE`
+### `EMPLOYEE_ATTENDANCE`
 | Column Name | Data Type | Nullable | Description |
 | ---- | ---- | ---- | ---- |
 | `EMPLOYEE_ID^` | `INT` | N |  |
 | `DATE_TIME_IN` | `DATETIME` | Y |  |
 | `DATE_TIME_OUT` | `DATETIME` | Y |  |
 
-##### `EMPLOYEE_SALARY_HIST`
+### `EMPLOYEE_SALARY_HIST`
 | Column Name | Data Type | Nullable | Description |
 | ---- | ---- | ---- | ---- |
 | `EMPLOYEE_ID^` | `INT` | N |  |
@@ -308,19 +310,19 @@ Salary is the monthly wage.
 | `PROMOTION_FLAG` | `BOOL` | Y |  |
 | `INCREASE_FLAG` | `BOOL` | Y |  |
 
-##### `STUDENT_VIOLATIONS`
+### `STUDENT_VIOLATIONS`
 | Column Name | Data Type | Nullable | Description |
 | --- | --- | --- | --- |
 | `STUDENT_ID` | `INT` | N | Reference to `STUDENT_ID` in `CURRENT_STUDENTS` table |
 | `VIOLATION_CODE` | `INT` | N | Reference to `VIOLATION_CODE` in `VIOLATION_CODES` table |
 
-##### `VIOLATION_CODES`
+### `VIOLATION_CODES`
 | Column Name | Data Type | Nullable | Description |
 | ---- | ---- | ---- | ---- |
 | `VIOLATION_CODE*` | `INT` | N |  |
 | `DECODE` | `NVARCHAR(255)` | N |  |
 
-##### `COURSES`
+### `COURSES`
 | Column Name    | Data Type       | Nullable | Description                                   |
 | -------------- | --------------- | -------- | --------------------------------------------- |
 | `COURSE_CODE*` | `VARCHAR(10)`   | N        | Unique identifier for the course              |
@@ -328,7 +330,7 @@ Salary is the monthly wage.
 | `TOTAL_UNITS`  | `INT`           | N        | Total units required for the course           |
 | `DEPT_ID^`     | `CHAR(3)`       | N        | Reference to `DEPT_ID` in `DEPARTMENTS` table |
 
-##### `SUBJECTS`
+### `SUBJECTS`
 | Column Name | Data Type | Nullable | Description |
 | --- | --- | --- | --- |
 | `SUBJECT_CODE*` | `VARCHAR(10)` | N | Unique identifier for the subject |
@@ -339,7 +341,7 @@ Salary is the monthly wage.
 | `SUBJECT_TUITION` | `FLOAT` | N | Tuition fee for the subject |
 | `DEPT_ID^` | `CHAR(3)` | N | Reference to `DEPT_ID` in `DEPARTMENTS` table |
 
-##### `CLASSES`
+### `CLASSES`
 | Column Name | Data Type | Nullable | Description |
 | --- | --- | --- | --- |
 | `CLASS_ID*` | `INT` | N | Unique identifier for the class |
@@ -353,7 +355,7 @@ Salary is the monthly wage.
 | `COMPLETED` | `BOOL` | N | Whether the class has been completed |
 | `ACTIVE_FLAG` | `BOOL` | N | Whether the class is active |
 
-##### `CLASS_SCHEDULES`
+### `CLASS_SCHEDULES`
 | Column Name | Data Type | Nullable | Description |
 | --- | --- | --- | --- |
 | `SCHEDULE_ID*` | `INT` | N | Unique identifier for the schedule |
@@ -363,7 +365,7 @@ Salary is the monthly wage.
 | `END_TIME` | `TIME` | N | End time of the class |
 | `PURGE_FLAG` | `BOOL` | N | Whether the schedule has been purged |
 
-##### `STUDENT_SUBJECTS`
+### `STUDENT_SUBJECTS`
 | Column Name   | Data Type | Nullable | Description                                                |
 | ------------- | --------- | -------- | ---------------------------------------------------------- |
 | `STUDENT_ID^` | `INT`     | N        | Reference to `STUDENT_ID` in `CURRENT_STUDENTS` table      |
@@ -371,7 +373,7 @@ Salary is the monthly wage.
 | `YEAR`        | `INT`     | N        | Academic year the subject is being studied                 |
 | `STATUS`      | `CHAR(1)` | N        | Status of the subject study ('A'ctive, 'P'assed, 'F'ailed) |
 
-##### `GRADES`
+### `GRADES`
 | Column Name | Data Type | Nullable | Description |
 | ---- | ---- | ---- | ---- |
 | `GRADE_ID*` | `INT` | N | Unique identifier for each grade entry. |
