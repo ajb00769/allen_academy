@@ -1,5 +1,5 @@
 from django.db import models
-from .custom import phone_validator
+from .custom import phone_validator, student_age_validator, staff_parent_age_validator
 from .constants import (
     REGISTRATION_KEY_TYPES,
     SUFFIX_CHOICES,
@@ -122,7 +122,11 @@ class StudentDetail(models.Model):
         max_length=3,
         null=True,
     )
-    birthday = models.DateField(blank=False, null=False)
+    birthday = models.DateField(
+        validators=[student_age_validator],
+        blank=False,
+        null=False,
+    )
     address = models.CharField(
         max_length=255,
         blank=False,
@@ -189,7 +193,11 @@ class EmployeeDetail(models.Model):
         max_length=3,
         null=True,
     )
-    birthday = models.DateField(blank=False, null=False)
+    birthday = models.DateField(
+        validators=[staff_parent_age_validator],
+        blank=False,
+        null=False,
+    )
     address = models.CharField(
         max_length=255,
         blank=False,
@@ -263,7 +271,11 @@ class ParentDetail(models.Model):
         max_length=3,
         null=True,
     )
-    birthday = models.DateField(blank=False, null=False)
+    birthday = models.DateField(
+        validators=[staff_parent_age_validator],
+        blank=False,
+        null=False,
+    )
     address = models.CharField(
         max_length=255,
         blank=False,

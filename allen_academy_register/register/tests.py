@@ -1,5 +1,7 @@
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+from datetime import date
+from dateutil.relativedelta import relativedelta
 from rest_framework import status
 from rest_framework.test import APITestCase
 from register.api.views import validate_registration_key, save_account_id
@@ -193,7 +195,7 @@ class HelperFunctionTests(APITestCase):
         data = {
             "reg_key": args.get("generated_key"),
             "key_type": args.get("key_type"),
-            "gen_for": "this is invalid",
+            "gen_for": "Some Random Invalid Name",
         }
         result = validate_registration_key(data)
         self.assertIn("error", result)
@@ -228,6 +230,17 @@ class RegisterTests(APITestCase):
             "generated_for": generated_for or self.default_generated_for,
         }
         return self.client.post(url, data, format="json")
+
+    def create_dummy_student(self):
+        args = self.generate_args()
+        dict_args = {
+            "reg_key": args.data.get("generated_key"),
+            "key_type": args.data.get("key_type"),
+        }
+        data = self.default_data.copy()
+        data.update(dict_args)
+        response = self.client.post(self.url, data, format="json")
+        return StudentDetail.objects.values_list("account_id", flat=True).first()
 
     def test_valid_registration_minimum(self):
         for key_type in self.all_key_types:
@@ -291,6 +304,7 @@ class RegisterTests(APITestCase):
                     self.assertIn("error", response.data)
                     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
                 else:
+                    self.assertEqual(response.data.get("success"), True)
                     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_missing_address(self):
@@ -385,6 +399,68 @@ class RegisterTests(APITestCase):
                 self.assertIn("error", response.data)
                 self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             else:
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_student_age_validator(self):
+        args = self.generate_args()
+        invalid_birthdates = [date.today(), date.today() - relativedelta(years=10)]
+        dict_args = {
+            "reg_key": args.data.get("generated_key"),
+            "key_type": args.data.get("key_type"),
+        }
+        for birthdate in invalid_birthdates:
+            with self.subTest():
+                dict_args_sub = dict_args.copy()
+                dict_args_sub.update({"birthday": birthdate})
+                data = self.default_data.copy()
+                data.update(dict_args_sub)
+                response = self.client.post(self.url, data, format="json")
+                self.assertIn("error", response.data)
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with self.subTest():
+            valid_birthdate = date.today() - relativedelta(years=11)
+            dict_args_sub = dict_args.copy()
+            dict_args_sub.update({"birthday": valid_birthdate})
+            data = self.default_data.copy()
+            data.update(dict_args_sub)
+            response = self.client.post(self.url, data, format="json")
+            self.assertEqual(response.data.get("success"), True)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_parent_staff_age_validator(self):
+        emp_args = self.generate_args(key_type="EMP")
+        emp_dict = {
+            "reg_key": emp_args.data.get("generated_key"),
+            "key_type": emp_args.data.get("key_type"),
+            "employment_type": "S",
+        }
+        par_args = self.generate_args(key_type="PAR")
+        par_dict = {
+            "reg_key": par_args.data.get("generated_key"),
+            "key_type": par_args.data.get("key_type"),
+            "relationship": "R",
+            "student": self.create_dummy_student(),
+        }
+        args = [emp_dict, par_dict]
+        invalid_birthdates = [date.today(), date.today() - relativedelta(years=20)]
+        valid_birthdate = date.today() - relativedelta(years=21)
+        for arg in args:
+            for birthdate in invalid_birthdates:
+                with self.subTest():
+                    arg_sub = arg.copy()
+                    arg_sub.update({"birthday": birthdate})
+                    data = self.default_data.copy()
+                    data.update(arg_sub)
+                    response = self.client.post(self.url, data, format="json")
+                    self.assertIn("error", response.data)
+                    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            with self.subTest():
+                arg_sub = arg.copy()
+                arg_sub.update({"birthday": valid_birthdate})
+                data = self.default_data.copy()
+                data.update(arg_sub)
+                response = self.client.post(self.url, data, format="json")
+                self.assertEqual(response.data.get("success"), True)
                 self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 

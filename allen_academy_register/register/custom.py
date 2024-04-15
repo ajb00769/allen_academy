@@ -2,6 +2,7 @@ from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 from secrets import token_hex
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 
 
 phone_validator = RegexValidator(
@@ -49,12 +50,20 @@ def generate_registration_key():
 
 
 def get_age(birthday):
-    """
-    birthday parameter must follow the format "YYYY-MM-DD", for example "2024-12-31".
-    Added if i to the list comprehension just in case a extra dashes or spaces are
-    passed in as arguments.
-    """
-    bday_str_to_int = [int(i) for i in birthday.split("-") if i]
-    bday_date_obj = date(*bday_str_to_int)
-    delta = relativedelta(date.today(), bday_date_obj)
+    # accepts datetime.date object
+    delta = relativedelta(date.today(), birthday)
     return delta.years
+
+
+def student_age_validator(birthday):
+    min_age = 11
+    user_age = get_age(birthday)
+    if user_age < min_age:
+        raise ValidationError(f"User too young. Must be at least {min_age} years old.")
+
+
+def staff_parent_age_validator(birthday):
+    min_age = 21
+    user_age = get_age(birthday)
+    if user_age < min_age:
+        raise ValidationError(f"User too young. Must be at least {min_age} years old.")
