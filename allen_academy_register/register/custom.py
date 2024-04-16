@@ -11,7 +11,7 @@ phone_validator = RegexValidator(
 )
 
 
-def date_time_handler(format):
+def date_time_handler(format: str) -> datetime:
     match format:
         case "year":
             return datetime.now().year
@@ -27,7 +27,7 @@ def date_time_handler(format):
             )
 
 
-def generate_account_id(all_account_id_counts):
+def generate_account_id(all_account_id_counts: int) -> int | dict:
     """
     all_account_id_counts should have the logic to take the current year into account.
     Table.objects.filter(column__startswith='year').count()
@@ -44,12 +44,12 @@ def generate_account_id(all_account_id_counts):
     return year + fill
 
 
-def generate_registration_key():
+def generate_registration_key() -> str:
     token = token_hex(8)
     return "-".join(token[i : i + 4] for i in range(0, len(token), 4))
 
 
-def get_age(birthday):
+def get_age(birthday: datetime) -> int:
     # accepts datetime.date object
     delta = relativedelta(date.today(), birthday)
     return delta.years

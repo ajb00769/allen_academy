@@ -331,6 +331,6 @@ def remove_nulls_and_empty_strings(input: list) -> str:
     return " ".join([i for i in input if i])
 
 
-def get_current_account_id_counts():
+def get_current_account_id_counts() -> int:
     current_year = date_time_handler(format="year")
     return AllAccountId.objects.filter(generated_id__startswith=current_year).count()
