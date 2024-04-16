@@ -69,8 +69,8 @@ def register(request):
         clean_excess_spaces_from_string(request.data.get("middle_name")),
         clean_excess_spaces_from_string(request.data.get("suffix")),
     ]  # sanitize input in case middle_name or suffix is null for null safety
-    gen_for = remove_nulls_and_empty_strings(gen_for_list)
-    key_type = request.data.get("key_type")
+    gen_for: str = remove_nulls_and_empty_strings(gen_for_list)
+    key_type: str = request.data.get("key_type")
 
     if not key_type or not gen_for:
         return Response(NULL_ARGS_ERROR, status=400)
@@ -91,7 +91,7 @@ def register(request):
     account_serializer_class, detail_serializer_class = serializer_map[key_type]
     account_class = model_map[key_type]
 
-    new_account_id = generate_account_id(get_current_account_id_counts())
+    new_account_id: str = generate_account_id(get_current_account_id_counts())
 
     try:
         with transaction.atomic():
@@ -150,7 +150,7 @@ def reg_key(request):
     client_data = request.data.copy()
     client_data.pop("key_used", None)
 
-    gen_for = clean_excess_spaces_from_string(client_data.get("generated_for"))
+    gen_for: str = clean_excess_spaces_from_string(client_data.get("generated_for"))
 
     if not gen_for or not client_data.get("key_type"):
         return Response(NULL_ARGS_ERROR, status=400)
@@ -159,12 +159,12 @@ def reg_key(request):
         return Response({"error": "Name too short."}, status=400)
 
     try:
-        new_key = generate_registration_key()
+        new_key: str = generate_registration_key()
 
         while new_key in RegistrationKey.objects.values_list(
             "generated_key", flat=True
         ):
-            new_key = generate_registration_key()
+            new_key: str = generate_registration_key()
 
         client_data.update(
             {
@@ -208,7 +208,9 @@ def save_account_id(account_id: str, max_retries=3) -> dict | str:
         try:
             with transaction.atomic():
                 if attempt > 0:
-                    account_id = generate_account_id(get_current_account_id_counts())
+                    account_id: str = generate_account_id(
+                        get_current_account_id_counts()
+                    )
 
                 if isinstance(account_id, dict):
                     account_id_err_msg = account_id.get("error")
@@ -252,7 +254,7 @@ def validate_registration_key(data: dict) -> dict | int:
     """
     func_name = validate_registration_key.__name__
 
-    reg_key = data.get("reg_key")
+    reg_key: str = data.get("reg_key")
 
     # Terminate the function early if the key does not exist
     try:
@@ -280,7 +282,7 @@ def validate_registration_key(data: dict) -> dict | int:
         )
         reg_key_errors.append("Key already used.")
 
-    gen_for = data.get("gen_for")
+    gen_for: str = data.get("gen_for")
 
     if reg_key_object.generated_for != gen_for:
         timestamp = date_time_handler(format="timestamp")

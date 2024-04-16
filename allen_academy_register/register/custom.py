@@ -45,7 +45,7 @@ def generate_account_id(all_account_id_counts: int) -> int | dict:
 
 
 def generate_registration_key() -> str:
-    token = token_hex(8)
+    token: str = token_hex(8)
     return "-".join(token[i : i + 4] for i in range(0, len(token), 4))
 
 
