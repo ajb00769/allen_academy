@@ -385,7 +385,7 @@ Salary is the monthly wage.
 | `GRADE_NUMERIC` | `INT` | N | Numeric representation of the grade (e.g., 90 for A, 80 for B, etc.). |
 
 
-DEVELOPMENT NOTES and Considerations:
+### DEVELOPMENT NOTES and Considerations:
 
 - create an unclustered index on email since it will be frequently used during login validation
 - explore database partitioning especially for student scholarship types
@@ -421,3 +421,18 @@ EXECUTE FUNCTION purge_used_reg_keys();
 | `AAR-00001` | A required parameter was not given any arguments.                                                                              |
 | `AAR-00002` | Arguments passed into the parameter is invalid. Could be that it's not a valid choice or not in the valid format or data type. |
 | `AAR-99999` | Unhandled error in endpoint. Please contact the developer of the API with the error message from the log file.                 |
+
+
+### .ENV file format:
+
+APP_SECRET_KEY=""
+DEBUG_MODE=True
+DJANGO_ALLOWED_HOSTS="0.0.0.0"
+
+DB_NAME="postgres"
+DB_USER="postgres"
+DB_PASSWORD=""
+DB_HOST="db"
+DB_PORT="5432"
+
+LOGFILE="register_api_logs.log"
