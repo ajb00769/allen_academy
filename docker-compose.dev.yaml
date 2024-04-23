@@ -1,18 +1,5 @@
 version: '3.9'
 services:
-  register:
-    env_file:
-      - ./allen_academy_register/.env.dev
-    build: ./allen_academy_register
-    depends_on:
-      - api_gateway
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./allen_academy_register:/usr/src/app
-    networks:
-      - backend
-    
   api_gateway:
     build: ./api_gateway
     depends_on:

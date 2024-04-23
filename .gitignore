@@ -4,3 +4,5 @@
 **/dockerlogs.log
 **/*_api_logs.log
 **/*.log
+**/*.sqlite3
+**/migrations
