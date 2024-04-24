@@ -1,5 +1,17 @@
-version: '3.9'
 services:
+  login:
+    env_file:
+      - ./allen_academy_login/.env.dev
+    build: ./allen_academy_login
+    depends_on:
+      - register
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./allen_academy_login:/usr/src/app
+    networks:
+      - backend
+
   register:
     env_file:
       - ./allen_academy_register/.env.dev
