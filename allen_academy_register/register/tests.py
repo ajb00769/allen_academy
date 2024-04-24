@@ -5,8 +5,8 @@ from dateutil.relativedelta import relativedelta
 from rest_framework import status
 from rest_framework.test import APITestCase
 from register.api.views import validate_registration_key, save_account_id
-from .custom import phone_validator, generate_account_id
-from .models import StudentDetail, AllAccountId
+from register.custom_utils.custom import phone_validator, generate_account_id
+from register.models import StudentDetail, AllAccountId
 
 
 class PhoneNumberValidationTests(APITestCase):

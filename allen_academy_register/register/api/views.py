@@ -3,7 +3,14 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.hashers import make_password
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from .serializers import (
+from register.models import (
+    RegistrationKey,
+    AllAccountId,
+    StudentAccount,
+    ParentAccount,
+    EmployeeAccount,
+)
+from register.api.serializers import (
     RegistrationKeySerializer,
     AccountIdSerializer,
     StudentAccountSerializer,
@@ -13,19 +20,12 @@ from .serializers import (
     ParentAccountSerializer,
     ParentDetailSerializer,
 )
-from ..custom import (
+from register.custom_utils.custom import (
     generate_registration_key,
     generate_account_id,
     date_time_handler,
 )
-from ..models import (
-    RegistrationKey,
-    AllAccountId,
-    StudentAccount,
-    ParentAccount,
-    EmployeeAccount,
-)
-from ..errors import (
+from register.custom_utils.errors import (
     NULL_ARGS_ERROR,
     INVALID_ARGS_ERROR,
     UNEXPECTED_ERROR,

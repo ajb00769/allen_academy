@@ -1,6 +1,10 @@
 from django.db import models
-from .custom import phone_validator, student_age_validator, staff_parent_age_validator
-from .constants import (
+from register.custom_utils.custom import (
+    phone_validator,
+    student_age_validator,
+    staff_parent_age_validator,
+)
+from register.custom_utils.constants import (
     REGISTRATION_KEY_TYPES,
     SUFFIX_CHOICES,
     STUDENT_ACCOUNT_STATUS_CHOICES,
