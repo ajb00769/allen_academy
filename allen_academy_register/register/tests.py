@@ -208,13 +208,16 @@ class HelperFunctionTests(APITestCase):
 
 
 class RegisterTests(APITestCase):
+    # Each test with for loops must have their own email addresses to prevent
+    # trigger of the unique email constraint, except when we are testing the
+    # unique email constraint itself
     def setUp(self):
         self.url = reverse("register")
         self.default_data = {
             "last_name": "Potter",
             "first_name": "Harry",
+            "email": "default_test_email@teest.com",
             "password": "1234",
-            "email": "testemail@email.com",
             "address": "test address",
             "birthday": "1997-05-06",
             "phone": "+1800123456789",
@@ -243,12 +246,18 @@ class RegisterTests(APITestCase):
         return StudentDetail.objects.values_list("account_id", flat=True).first()
 
     def test_valid_registration_minimum(self):
-        for key_type in self.all_key_types:
+        test_emails = [
+            "test_valid_registration_minimum_1@test.com",
+            "test_valid_registration_minimum_2@test.com",
+            "test_valid_registration_minimum_3@test.com",
+        ]
+        for key_type, email in list(zip(self.all_key_types, test_emails)):
             with self.subTest():
                 args = self.generate_args(key_type)
                 dict_args = {
                     "reg_key": args.data.get("generated_key"),
                     "key_type": args.data.get("key_type"),
+                    "email": email,
                 }
                 data = self.default_data.copy()
                 data.update(dict_args)
@@ -259,7 +268,6 @@ class RegisterTests(APITestCase):
                     data.update({"relationship": "R", "student": student})
                 elif key_type == "EMP":
                     data.update({"employment_type": "S"})
-
                 response = self.client.post(self.url, data, format="json")
                 self.assertEqual(response.data.get("success"), True)
                 self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -289,10 +297,16 @@ class RegisterTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_missing_phone_number(self):
-        for key_type in self.all_key_types:
+        test_emails = [
+            "test_missing_phone_number_1@test.com",
+            "test_missing_phone_number_2@test.com",
+            "test_missing_phone_number_3@test.com",
+        ]
+        for key_type, email in list(zip(self.all_key_types, test_emails)):
             with self.subTest():
                 args = self.generate_args(key_type=key_type)
                 dict_args = {
+                    "email": email,
                     "reg_key": args.data.get("generated_key"),
                     "key_type": args.data.get("key_type"),
                 }
@@ -322,7 +336,9 @@ class RegisterTests(APITestCase):
 
     def test_missing_reg_key(self):
         args = self.generate_args()
-        dict_args = {"key_type": args.data.get("key_type")}
+        dict_args = {
+            "key_type": args.data.get("key_type"),
+        }
         data = self.default_data.copy()
         data.update(dict_args)
         response = self.client.post(self.url, data, format="json")
@@ -427,38 +443,43 @@ class RegisterTests(APITestCase):
             self.assertEqual(response.data.get("success"), True)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_parent_staff_age_validator(self):
-        emp_args = self.generate_args(key_type="EMP")
-        emp_dict = {
-            "reg_key": emp_args.data.get("generated_key"),
-            "key_type": emp_args.data.get("key_type"),
-            "employment_type": "S",
-        }
-        par_args = self.generate_args(key_type="PAR")
-        par_dict = {
-            "reg_key": par_args.data.get("generated_key"),
-            "key_type": par_args.data.get("key_type"),
-            "relationship": "R",
-            "student": self.create_dummy_student(),
-        }
-        args = [emp_dict, par_dict]
+    def test_par_emp_age_validator(self):
         invalid_birthdates = [date.today(), date.today() - relativedelta(years=20)]
-        valid_birthdate = date.today() - relativedelta(years=21)
-        for arg in args:
+        test_key_types = ["PAR", "EMP"]
+        args = [
+            arg for arg in [self.generate_args(key_type=key) for key in test_key_types]
+        ]
+        dict_args = [
+            {
+                "reg_key": args[0].data.get("generated_key"),
+                "key_type": args[0].data.get("key_type"),
+                "email": "override_default_test_email_1@test.com",
+                "relationship": "R",
+                "student": self.create_dummy_student(),
+            },
+            {
+                "reg_key": args[1].data.get("generated_key"),
+                "key_type": args[1].data.get("key_type"),
+                "email": "override_default_test_email_2@test.com",
+                "employment_type": "S",
+            },
+        ]
+        for test_case_args in dict_args:
             for birthdate in invalid_birthdates:
                 with self.subTest():
-                    arg_sub = arg.copy()
-                    arg_sub.update({"birthday": birthdate})
+                    subtest_args = test_case_args.copy()
+                    subtest_args.update({"birthday": birthdate})
                     data = self.default_data.copy()
-                    data.update(arg_sub)
+                    data.update(subtest_args)
                     response = self.client.post(self.url, data, format="json")
                     self.assertIn("error", response.data)
                     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             with self.subTest():
-                arg_sub = arg.copy()
-                arg_sub.update({"birthday": valid_birthdate})
+                valid_birthdate = date.today() - relativedelta(years=21)
+                subtest_args = test_case_args.copy()
+                subtest_args.update({"birthday": valid_birthdate})
                 data = self.default_data.copy()
-                data.update(arg_sub)
+                data.update(subtest_args)
                 response = self.client.post(self.url, data, format="json")
                 self.assertEqual(response.data.get("success"), True)
                 self.assertEqual(response.status_code, status.HTTP_201_CREATED)

@@ -6,18 +6,14 @@ from rest_framework.decorators import api_view
 from register.models import (
     RegistrationKey,
     AllAccountId,
-    StudentAccount,
-    ParentAccount,
-    EmployeeAccount,
+    AllAccount,
 )
 from register.api.serializers import (
     RegistrationKeySerializer,
     AccountIdSerializer,
-    StudentAccountSerializer,
+    AllAccountSerializer,
     StudentDetailSerializer,
-    EmployeeAccountSerializer,
     EmployeeDetailSerializer,
-    ParentAccountSerializer,
     ParentDetailSerializer,
 )
 from register.custom_utils.custom import (
@@ -47,15 +43,9 @@ def register(request):
     func_name = register.__name__
 
     serializer_map = {
-        "STU": (StudentAccountSerializer, StudentDetailSerializer),
-        "PAR": (ParentAccountSerializer, ParentDetailSerializer),
-        "EMP": (EmployeeAccountSerializer, EmployeeDetailSerializer),
-    }
-
-    model_map = {
-        "STU": StudentAccount,
-        "PAR": ParentAccount,
-        "EMP": EmployeeAccount,
+        "STU": StudentDetailSerializer,
+        "PAR": ParentDetailSerializer,
+        "EMP": EmployeeDetailSerializer,
     }
 
     """
@@ -88,8 +78,7 @@ def register(request):
         "key_type": key_type,
     }
 
-    account_serializer_class, detail_serializer_class = serializer_map[key_type]
-    account_class = model_map[key_type]
+    detail_serializer_class = serializer_map[key_type]
 
     new_account_id: str = generate_account_id(get_current_account_id_counts())
 
@@ -117,17 +106,19 @@ def register(request):
             account_serializer_data.update(
                 {
                     "account_id": saved_account_id,
+                    "username": request.data.get("email"),
                     "password": make_password(account_serializer_data.get("password")),
+                    "account_type": key_type,
                 }
             )
-            account_serializer = account_serializer_class(data=account_serializer_data)
+            account_serializer = AllAccountSerializer(data=account_serializer_data)
 
             if not account_serializer.is_valid():
                 raise Exception(account_serializer.errors)
             account_serializer.save()
 
             # Populate the AccountDetail table
-            account_object = account_class.objects.get(
+            account_object = AllAccount.objects.get(
                 account_id=account_serializer.data.get("account_id")
             )
             detail_serializer_data = request.data.copy()

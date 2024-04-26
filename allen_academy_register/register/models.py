@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 from register.custom_utils.custom import (
     phone_validator,
     student_age_validator,
@@ -78,14 +79,22 @@ class AllAccountId(models.Model):
     generated_id = models.CharField(primary_key=True, max_length=9)
 
 
-class StudentAccount(models.Model):
+class AllAccount(AbstractUser):
     account_id = models.OneToOneField(
         "AllAccountId",
         to_field="generated_id",
         on_delete=models.PROTECT,
         primary_key=True,
     )
+    account_type = models.CharField(
+        choices=REGISTRATION_KEY_TYPES,
+        max_length=3,
+        db_index=True,
+        blank=False,
+        null=False,
+    )
     email = models.EmailField(
+        max_length=150,
         db_index=True,
         unique=True,
         blank=False,
@@ -101,7 +110,7 @@ class StudentAccount(models.Model):
 
 class StudentDetail(models.Model):
     account_id = models.OneToOneField(
-        "StudentAccount",
+        "AllAccount",
         to_field="account_id",
         primary_key=True,
         on_delete=models.PROTECT,
@@ -149,30 +158,9 @@ class StudentDetail(models.Model):
     )
 
 
-class EmployeeAccount(models.Model):
-    account_id = models.OneToOneField(
-        "AllAccountId",
-        to_field="generated_id",
-        on_delete=models.PROTECT,
-        primary_key=True,
-    )
-    email = models.EmailField(
-        db_index=True,
-        unique=True,
-        blank=False,
-        null=False,
-    )
-    password = models.BinaryField(
-        max_length=255,
-        blank=False,
-        null=False,
-    )
-    allow_login = models.BooleanField(default=True, null=False)
-
-
 class EmployeeDetail(models.Model):
     account_id = models.OneToOneField(
-        "EmployeeAccount",
+        "AllAccount",
         to_field="account_id",
         primary_key=True,
         on_delete=models.PROTECT,
@@ -227,30 +215,9 @@ class EmployeeDetail(models.Model):
     )
 
 
-class ParentAccount(models.Model):
-    account_id = models.OneToOneField(
-        "AllAccountId",
-        to_field="generated_id",
-        primary_key=True,
-        on_delete=models.PROTECT,
-    )
-    email = models.EmailField(
-        db_index=True,
-        unique=True,
-        blank=False,
-        null=False,
-    )
-    password = models.BinaryField(
-        max_length=255,
-        blank=False,
-        null=False,
-    )
-    allow_login = models.BooleanField(default=True, null=False)
-
-
 class ParentDetail(models.Model):
     account_id = models.OneToOneField(
-        "ParentAccount",
+        "AllAccount",
         to_field="account_id",
         primary_key=True,
         on_delete=models.PROTECT,
