@@ -91,6 +91,10 @@ DATABASES = {
     }
 }
 
+# User auth
+
+AUTH_USER_MODEL = "register.AllAccount"
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators

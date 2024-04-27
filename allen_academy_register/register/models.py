@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from register.custom_utils.custom import (
     phone_validator,
     student_age_validator,
@@ -100,10 +100,24 @@ class AllAccount(AbstractUser):
         blank=False,
         null=False,
     )
-    password = models.BinaryField(
+    password = models.CharField(
         max_length=255,
         blank=False,
         null=False,
+    )
+    groups = models.ManyToManyField(
+        Group,
+        related_name="common_user_groups",
+        blank=True,
+        help_text="The groups this user belongs to. Users are granted permissions relative to the groups they belong to",
+        verbose_name="common user groups",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name="common_user_permissions",
+        blank=True,
+        help_text="Specific user permissions.",
+        verbose_name="common user permissions",
     )
     allow_login = models.BooleanField(default=True, null=False)
 

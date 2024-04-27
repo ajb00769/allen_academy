@@ -2,11 +2,9 @@ from rest_framework import serializers
 from register.models import (
     RegistrationKey,
     AllAccountId,
-    StudentAccount,
+    AllAccount,
     StudentDetail,
-    EmployeeAccount,
     EmployeeDetail,
-    ParentAccount,
     ParentDetail,
 )
 
@@ -23,33 +21,15 @@ class AccountIdSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class StudentAccountSerializer(serializers.ModelSerializer):
+class AllAccountSerializer(serializers.ModelSerializer):
     class Meta:
-        model = StudentAccount
-        fields = "__all__"
-
-
-class StudentDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StudentDetail
-        fields = "__all__"
-
-
-class EmployeeAccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EmployeeAccount
+        model = AllAccount
         fields = "__all__"
 
 
 class EmployeeDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeDetail
-        fields = "__all__"
-
-
-class ParentAccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ParentAccount
         fields = "__all__"
 
 
