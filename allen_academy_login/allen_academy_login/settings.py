@@ -14,11 +14,31 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
+from custom_common.exceptions import MissingEnvironmentVariable
 
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# Running environment variable checks
+env_keys = [
+    "APP_SECRET_KEY",
+    "DEBUG_MODE",
+    "DJANGO_ALLOWED_HOSTS",
+    "DB_NAME",
+    "DB_USER",
+    "DB_HOST",
+    "DB_PORT",
+    "JWT_SECRET_KEY",
+]
+
+for key in env_keys:
+    if os.getenv(key) is None:
+        raise MissingEnvironmentVariable(
+            f"Environment Variable {key} missing. Please create required environment variable"
+        )
 
 
 # Quick-start development settings - unsuitable for production
@@ -153,6 +173,7 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": False,
     "ALGORITHM": "HS256",
+    "SIGNING_KEY": os.getenv("JWT_SECRET_KEY"),
     "VERIFYING_KEY": None,
     "AUDIENCE": None,
     "ISSUER": None,
