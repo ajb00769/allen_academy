@@ -26,6 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env_keys = [
     "APP_SECRET_KEY",
     "DEBUG_MODE",
+    "DJANGO_ALLOWED_HOSTS",
     "DB_NAME",
     "DB_USER",
     "DB_HOST",
