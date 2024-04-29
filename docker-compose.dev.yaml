@@ -6,7 +6,7 @@ services:
     depends_on:
       - register
     ports:
-      - "8001:8000"
+      - "8080:8080"
     volumes:
       - ./allen_academy_login:/usr/src/app
     networks:

@@ -26,7 +26,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env_keys = [
     "APP_SECRET_KEY",
     "DEBUG_MODE",
-    "DJANGO_ALLOWED_HOSTS",
     "DB_NAME",
     "DB_USER",
     "DB_HOST",
@@ -50,7 +49,8 @@ SECRET_KEY = os.getenv("APP_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG_MODE")
 
-ALLOWED_HOSTS = [os.getenv("DJANGO_ALLOWED_HOSTS")]
+fetch_allowed_hosts = os.getenv("DJANGO_ALLOWED_HOSTS")
+ALLOWED_HOSTS = ["*"] if fetch_allowed_hosts is None else fetch_allowed_hosts.split(",")
 
 
 # Application definition
