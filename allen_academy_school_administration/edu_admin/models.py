@@ -83,7 +83,7 @@ class Subject(models.Model):
         to_field="course_code",
         on_delete=models.PROTECT,
     )
-    course_yr_lvl = models.IntegerField(
+    course_yr_lvl = models.CharField(
         max_length=4,
         choices=[
             *ELEMENTARY_SCHOOL_CHOICES,
