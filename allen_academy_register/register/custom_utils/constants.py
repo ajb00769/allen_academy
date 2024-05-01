@@ -50,8 +50,12 @@ FAMILY_TYPE_CHOICES = [
     ("G", "Legal Guardian"),
 ]
 
-"""
-This section is to be transferred to the enrollment service.
+
+SCHOLAR_TYPE_CHOICES = [
+    ("N", "Not a scholar"),
+    ("H", "Half scholarship"),
+    ("F", "Full scholarship"),
+]
 
 
 ELEMENTARY_SCHOOL_CHOICES = [
@@ -113,11 +117,3 @@ PHD_CHOICES = [
     ("PHD6", "Doctorate 6"),
     ("PHD7", "Doctorate 7"),
 ]
-
-
-SCHOLAR_TYPE_CHOICES = [
-    ("N", "Not a scholar"),
-    ("H", "Half scholarship"),
-    ("F", "Full scholarship"),
-]
-"""
