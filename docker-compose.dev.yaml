@@ -1,4 +1,17 @@
 services:
+  enrollment:
+    env_file:
+      - ./allen_academy_enrollment/.env.dev
+    build: ./allen_academy_enrollment
+    depends_on:
+      - login
+    ports:
+      - "8800:8800"
+    volumes:
+      - ./allen_academy_enrollment:usr/src/app
+    networks:
+      - backend
+
   login:
     env_file:
       - ./allen_academy_login/.env.dev
