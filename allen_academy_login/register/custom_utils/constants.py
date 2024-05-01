@@ -36,7 +36,8 @@ REGISTRATION_KEY_TYPES = [
 
 EMPLOYEE_TYPE_CHOICES = [
     ("T", "Teacher"),
-    ("S", "Staff"),
+    ("A", "Administrative Staff"),
+    ("S", "Other Staff"),
     ("D", "Dean"),
 ]
 
