@@ -94,9 +94,9 @@ def register(request):
             transaction.atomic if the succeeding operations fail an account will not
             be created but the registration key will become unusable.
             """
-            validate_reg_key = validate_registration_key(for_reg_key_validation)
-            if isinstance(validate_reg_key, dict):
-                return Response(validate_reg_key, status=400)
+            validated_reg_key = validate_registration_key(for_reg_key_validation)
+            if validated_reg_key.get("error"):
+                return Response(validated_reg_key.get("error"), status=400)
 
             saved_account_id = save_account_id(account_id=new_account_id)
             if isinstance(saved_account_id, dict):
@@ -122,6 +122,9 @@ def register(request):
                 account_id=account_serializer.data.get("account_id")
             )
             detail_serializer_data = request.data.copy()
+            detail_serializer_data.update(
+                {"current_yr_lvl": validated_reg_key.get("year_level")}
+            )
             detail_serializer_data.update({"account_id": account_object.account_id})
             detail_serializer = detail_serializer_class(data=detail_serializer_data)
 
@@ -129,7 +132,7 @@ def register(request):
                 raise Exception(detail_serializer.errors)
             detail_serializer.save()
 
-            return Response({"success": True}, status=201)
+            return Response(detail_serializer.data, status=201)
     except Exception as e:
         return handle_exception(e, func_name=func_name)
 
@@ -234,7 +237,7 @@ def save_account_id(account_id: str, max_retries=3) -> dict | str:
             }
 
 
-def validate_registration_key(data: dict) -> dict | int:
+def validate_registration_key(data: dict) -> dict | RegistrationKeySerializer:
     """
     No other exceptions expected to happen in this helper function since the only
     point of failure would be getting a null reg_key_object if they reg_key argument
@@ -253,29 +256,34 @@ def validate_registration_key(data: dict) -> dict | int:
     except RegistrationKey.DoesNotExist:
         return {"error": "Invalid key."}
 
+    reg_key_serializer = RegistrationKeySerializer(reg_key_object)
+    reg_key_data = reg_key_serializer.data
+
     # Terminate the function early if key is for another account type
-    if reg_key_object.key_type != data.get("key_type"):
+    if reg_key_data.get("key_type") != data.get("key_type"):
         return {"error": "Key type is for a different account type."}
 
     reg_key_errors = []
 
     if reg_key_object.key_expiry <= date_time_handler("date"):
         timestamp = date_time_handler(format="timestamp")
+        generated_for_err_field = reg_key_data.get("generated_for")
         logger.exception(
-            f"[{timestamp}]{func_name}: An expired key was attempted to be registered belonging to: {reg_key_object.generated_for}."
+            f"[{timestamp}]{func_name}: An expired key was attempted to be registered belonging to: {generated_for_err_field}."
         )
         reg_key_errors.append("Key already expired, please request a new key.")
 
-    if reg_key_object.key_used:
+    if reg_key_data.get("key_used"):
         timestamp = date_time_handler(format="timestamp")
+        generated_key_err_field = reg_key_data.get("generated_key")
         logger.warning(
-            f"[{timestamp}]{func_name}: Someone attempted to register with a used key: {reg_key_object.generated_key}."
+            f"[{timestamp}]{func_name}: Someone attempted to register with a used key: {generated_key_err_field}."
         )
         reg_key_errors.append("Key already used.")
 
     gen_for: str = data.get("gen_for")
 
-    if reg_key_object.generated_for != gen_for:
+    if reg_key_data.get("generated_for") != gen_for:
         timestamp = date_time_handler(format="timestamp")
         logger.exception(
             f"[{timestamp}]{func_name}: User attempted to use registration key {reg_key} for {gen_for}. If user complains please check the db for the key's owner."
@@ -284,12 +292,12 @@ def validate_registration_key(data: dict) -> dict | int:
 
     if (
         reg_key_object is not None
-        and reg_key_object.generated_for == gen_for
+        and reg_key_data.get("generated_for") == gen_for
         and not reg_key_errors
     ):
         reg_key_object.key_used = True
         reg_key_object.save()
-        return 0
+        return reg_key_data
 
     reg_key_errors.append("Registration error.")
     return {
