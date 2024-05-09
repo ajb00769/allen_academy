@@ -199,25 +199,25 @@ class StudentDetail(models.Model):
     )
 
     def is_elementary(self) -> bool:
-        return self.course_yr_lvl in dict(ELEMENTARY_SCHOOL_CHOICES)
+        return self.current_yr_lvl in dict(ELEMENTARY_SCHOOL_CHOICES)
 
     def is_middle_school(self) -> bool:
-        return self.course_yr_lvl in dict(MIDDLE_SCHOOL_CHOICES)
+        return self.current_yr_lvl in dict(MIDDLE_SCHOOL_CHOICES)
 
     def is_high_school(self) -> bool:
-        return self.course_yr_lvl in dict(HIGH_SCHOOL_CHOICES)
+        return self.current_yr_lvl in dict(HIGH_SCHOOL_CHOICES)
 
     def is_college(self) -> bool:
-        return self.course_yr_lvl in dict(COLLEGE_LEVEL_CHOICES)
+        return self.current_yr_lvl in dict(COLLEGE_LEVEL_CHOICES)
 
     def is_law(self) -> bool:
-        return self.course_yr_lvl in dict(LAW_CHOICES)
+        return self.current_yr_lvl in dict(LAW_CHOICES)
 
     def is_masters(self) -> bool:
-        return self.course_yr_lvl in dict(MASTERS_CHOICES)
+        return self.current_yr_lvl in dict(MASTERS_CHOICES)
 
     def is_phd(self) -> bool:
-        return self.course_yr_lvl in dict(PHD_CHOICES)
+        return self.current_yr_lvl in dict(PHD_CHOICES)
 
 
 class EmployeeDetail(models.Model):
