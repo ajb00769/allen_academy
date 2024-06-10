@@ -1,5 +1,5 @@
 from django.db import models
-from custom_common.constants import (
+from register.custom_utils.constants import (
     ELEMENTARY_SCHOOL_CHOICES,
     MIDDLE_SCHOOL_CHOICES,
     HIGH_SCHOOL_CHOICES,
@@ -28,22 +28,25 @@ class Department(models.Model):
         null=False,
     )
     dept_head = models.OneToOneField(
-        "regsiter.EmployeeDetail",
+        "register.EmployeeDetail",
         to_field="account_id",
         on_delete=models.PROTECT,
         null=False,
+        related_name="dept_headed",
     )
     created_by = models.ForeignKey(
         "register.EmployeeDetail",
         to_field="account_id",
         on_delete=models.PROTECT,
         null=False,
+        related_name="depts_created",
     )
     created_on = models.DateTimeField(null=False)
     updated_by = models.ForeignKey(
         "register.EmployeeDetail",
         to_field="account_id",
         on_delete=models.PROTECT,
+        related_name="depts_updated",
     )
     updated_on = models.DateTimeField()
 
@@ -121,11 +124,15 @@ class Subject(models.Model):
 
 
 class ClassSubject(models.Model):
-    class_id = models.IntegerChoices(primary_key=True)
-    subject_code = models.ForeignKey()
+    class_id = models.IntegerField(primary_key=True)
+    subject_code = models.ForeignKey(
+        "Subject",
+        to_field="subject_code",
+        on_delete=models.PROTECT,
+    )
     subject_block = models.CharField()
     professor = models.ForeignKey(
-        "EmployeeDetail",
+        "register.EmployeeDetail",
         to_field="account_id",
         on_delete=models.PROTECT,
     )

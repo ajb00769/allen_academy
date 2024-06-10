@@ -52,7 +52,7 @@ FAMILY_TYPE_CHOICES = [
 
 """
 This section is to be transferred to the enrollment service.
-
+"""
 
 ELEMENTARY_SCHOOL_CHOICES = [
     ("EMS1", "Elementary School 1"),
@@ -120,4 +120,3 @@ SCHOLAR_TYPE_CHOICES = [
     ("H", "Half scholarship"),
     ("F", "Full scholarship"),
 ]
-"""
