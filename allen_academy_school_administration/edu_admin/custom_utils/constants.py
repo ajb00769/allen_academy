@@ -57,3 +57,28 @@ PHD_CHOICES = [
     ("PHD6", "Doctorate 6"),
     ("PHD7", "Doctorate 7"),
 ]
+
+
+SEMESTER_CHOICES = [
+    (1, "1st Semester"),
+    (2, "2nd Semester"),
+    (3, "3rd Semester"),
+]
+
+
+SUBJECT_TYPE_CHOICES = [
+    ("M", "Major"),
+    ("m", "Minor"),
+    ("E", "Elective"),
+]
+
+
+DAY_NAMES = [
+    ("Mon", "Monday"),
+    ("Tue", "Tuesday"),
+    ("Wed", "Wednesday"),
+    ("Thu", "Thursday"),
+    ("Fri", "Friday"),
+    ("Sat", "Saturday"),
+    ("Sun", "Sunday"),
+]

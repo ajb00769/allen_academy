@@ -1,5 +1,9 @@
 from django.db import models
-from register.custom_utils.constants import (
+from edu_admin.custom_utils.custom import (
+    class_end_date_validator,
+    class_end_time_validator,
+)
+from edu_admin.custom_utils.constants import (
     ELEMENTARY_SCHOOL_CHOICES,
     MIDDLE_SCHOOL_CHOICES,
     HIGH_SCHOOL_CHOICES,
@@ -7,6 +11,9 @@ from register.custom_utils.constants import (
     LAW_CHOICES,
     MASTERS_CHOICES,
     PHD_CHOICES,
+    SEMESTER_CHOICES,
+    SUBJECT_TYPE_CHOICES,
+    DAY_NAMES,
 )
 
 
@@ -76,11 +83,21 @@ class Course(models.Model):
 
 class Subject(models.Model):
     subject_code = models.CharField(primary_key=True, max_length=10)
-    subject_type = models.CharField()
-    subject_name = models.CharField(max_length=255)
-    subject_units = models.IntegerField()
-    wk_class_dura = models.IntegerField()
-    subject_tuition = models.FloatField()
+    subject_type = models.CharField(
+        choices=SUBJECT_TYPE_CHOICES,
+        blank=False,
+        null=False,
+    )
+    subject_name = models.CharField(
+        max_length=255,
+        blank=False,
+        null=False,
+    )
+    subject_units = models.IntegerField(blank=False, null=False)
+    wk_class_dura = models.IntegerField(
+        blank=False, null=False
+    )  # INFO: expressed as number of hours per week
+    subject_tuition = models.FloatField(blank=False, null=False)
     course_code = models.ForeignKey(
         "Course",
         to_field="course_code",
@@ -130,21 +147,38 @@ class ClassSubject(models.Model):
         to_field="subject_code",
         on_delete=models.PROTECT,
     )
-    subject_block = models.CharField()
+    subject_block = models.CharField(
+        max_length=10,
+        unique=True,
+        blank=False,
+        null=False,
+    )
     professor = models.ForeignKey(
         "register.EmployeeDetail",
         to_field="account_id",
         on_delete=models.PROTECT,
     )
-    semester = models.IntegerField()
-    school_year = models.IntegerField()
-    start_date = models.DateField()
-    end_date = models.DateField()
-    completed = models.BooleanField()
-    active_flag = models.BooleanField()
+    semester = models.IntegerField(
+        choices=SEMESTER_CHOICES,
+        blank=False,
+        null=False,
+    )
+    start_date = models.DateField(blank=False, null=False)
+    end_date = models.DateField(
+        validators=[class_end_date_validator],
+        blank=False,
+        null=False,
+    )
+    completed = models.BooleanField(default=False)
+    active_flag = models.BooleanField(default=True)
 
-    def is_active(self):
+    def is_active(self) -> bool:
         return self.active_flag
+
+    def get_school_year(self) -> str:
+        school_year_start = self.start_date.year
+        school_year_end = school_year_start + 1
+        return f"{school_year_start} - {school_year_end}"
 
 
 class ClassSchedule(models.Model):
@@ -154,7 +188,15 @@ class ClassSchedule(models.Model):
         to_field="class_id",
         on_delete=models.PROTECT,
     )
-    day_of_wk = models.CharField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    active_flag = models.BooleanField()
+    day_of_wk = models.CharField(
+        choices=DAY_NAMES,
+        blank=False,
+        null=False,
+    )
+    start_time = models.TimeField(blank=False, null=False)
+    end_time = models.TimeField(
+        validators=[class_end_time_validator],
+        blank=False,
+        null=False,
+    )
+    active_flag = models.BooleanField(default=True)

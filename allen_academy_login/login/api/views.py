@@ -1,8 +1,5 @@
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.hashers import check_password
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from login.api.serializers import CustomTokenObtainPairSerializer
 
 
