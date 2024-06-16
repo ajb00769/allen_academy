@@ -1,6 +1,11 @@
 # CHANGELOG
 
 
+## [0.0.4] - 2024-06-16
+
+- added unit tests for school_administration branch. Only able to add test for JWT checking, data validation and etc will be added in integration testing.
+- school_administration fully working as of now. All manual tests passed.
+
 ## [0.0.3] - 2024-06-12
 
 - created project folder for enrollment service
