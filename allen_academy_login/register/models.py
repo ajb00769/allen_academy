@@ -119,7 +119,6 @@ class AllAccount(AbstractUser):
         help_text="Specific user permissions.",
         verbose_name="common user permissions",
     )
-    allow_login = models.BooleanField(default=True, null=False)
 
 
 class StudentDetail(models.Model):

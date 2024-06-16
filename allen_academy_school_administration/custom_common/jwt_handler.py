@@ -4,6 +4,8 @@ from django.conf import settings
 
 def handle_jwt(request) -> dict:
     try:
+        if request.data.get("token") is None:
+            return {"error": "no_token_supplied"}
         payload = jwt.decode(
             request.data.get("token"), settings.JWT_SECRET_KEY, algorithms=["HS256"]
         )

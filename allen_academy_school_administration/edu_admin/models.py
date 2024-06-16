@@ -1,8 +1,4 @@
 from django.db import models
-from edu_admin.custom_utils.custom import (
-    class_end_date_validator,
-    class_end_time_validator,
-)
 from edu_admin.custom_utils.constants import (
     ELEMENTARY_SCHOOL_CHOICES,
     MIDDLE_SCHOOL_CHOICES,
@@ -21,13 +17,15 @@ class Department(models.Model):
     dept_id = models.CharField(
         primary_key=True,
         max_length=10,
-        unique=True,
+        blank=False,
         null=False,
     )
     dept_parent = models.ForeignKey(
         "Department",
         to_field="dept_id",
         on_delete=models.PROTECT,
+        blank=True,
+        null=True,
     )
     dept_name = models.CharField(
         max_length=255,
@@ -54,15 +52,17 @@ class Department(models.Model):
         to_field="account_id",
         on_delete=models.PROTECT,
         related_name="depts_updated",
+        blank=True,
+        null=True,
     )
-    updated_on = models.DateTimeField()
+    updated_on = models.DateTimeField(blank=True, null=True)
 
 
 class Course(models.Model):
     course_code = models.CharField(
         primary_key=True,
         max_length=10,
-        unique=True,
+        blank=False,
         null=False,
     )
     course_name = models.CharField(
@@ -82,7 +82,12 @@ class Course(models.Model):
 
 
 class Subject(models.Model):
-    subject_code = models.CharField(primary_key=True, max_length=10)
+    subject_code = models.CharField(
+        primary_key=True,
+        max_length=10,
+        blank=False,
+        null=False,
+    )
     subject_type = models.CharField(
         choices=SUBJECT_TYPE_CHOICES,
         blank=False,
@@ -118,34 +123,40 @@ class Subject(models.Model):
         null=False,
     )
 
-    def is_elementary(self):
+    def is_elementary(self) -> bool:
         return self.course_yr_lvl in dict(ELEMENTARY_SCHOOL_CHOICES)
 
-    def is_middle_school(self):
+    def is_middle_school(self) -> bool:
         return self.course_yr_lvl in dict(MIDDLE_SCHOOL_CHOICES)
 
-    def is_high_school(self):
+    def is_high_school(self) -> bool:
         return self.course_yr_lvl in dict(HIGH_SCHOOL_CHOICES)
 
-    def is_college(self):
+    def is_college(self) -> bool:
         return self.course_yr_lvl in dict(COLLEGE_LEVEL_CHOICES)
 
-    def is_law(self):
+    def is_law(self) -> bool:
         return self.course_yr_lvl in dict(LAW_CHOICES)
 
-    def is_masters(self):
+    def is_masters(self) -> bool:
         return self.course_yr_lvl in dict(MASTERS_CHOICES)
 
-    def is_phd(self):
+    def is_phd(self) -> bool:
         return self.course_yr_lvl in dict(PHD_CHOICES)
 
 
 class ClassSubject(models.Model):
-    class_id = models.IntegerField(primary_key=True)
+    class_id = models.IntegerField(
+        primary_key=True,
+        blank=False,
+        null=False,
+    )
     subject_code = models.ForeignKey(
         "Subject",
         to_field="subject_code",
         on_delete=models.PROTECT,
+        blank=False,
+        null=False,
     )
     subject_block = models.CharField(
         max_length=10,
@@ -164,11 +175,7 @@ class ClassSubject(models.Model):
         null=False,
     )
     start_date = models.DateField(blank=False, null=False)
-    end_date = models.DateField(
-        validators=[class_end_date_validator],
-        blank=False,
-        null=False,
-    )
+    end_date = models.DateField(blank=False, null=False)
     completed = models.BooleanField(default=False)
     active_flag = models.BooleanField(default=True)
 
@@ -182,7 +189,11 @@ class ClassSubject(models.Model):
 
 
 class ClassSchedule(models.Model):
-    schedule_id = models.IntegerField(primary_key=True)
+    schedule_id = models.IntegerField(
+        primary_key=True,
+        blank=False,
+        null=False,
+    )
     class_id = models.ForeignKey(
         "ClassSubject",
         to_field="class_id",
@@ -194,9 +205,5 @@ class ClassSchedule(models.Model):
         null=False,
     )
     start_time = models.TimeField(blank=False, null=False)
-    end_time = models.TimeField(
-        validators=[class_end_time_validator],
-        blank=False,
-        null=False,
-    )
+    end_time = models.TimeField(blank=False, null=False)
     active_flag = models.BooleanField(default=True)
