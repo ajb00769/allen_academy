@@ -15,6 +15,11 @@ def login(request):
         decoded = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
         try:
             user_obj = AllAccount.objects.get(account_id=decoded.get("user_id"))
+            if not user_obj.is_active:
+                return Response(
+                    {"error": "cannot_give_token_to_banned_user"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             refresh = RefreshToken.for_user(user_obj)
             return Response(
                 {"new_access_token": str(refresh.access_token)},

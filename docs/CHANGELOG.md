@@ -1,24 +1,26 @@
 # CHANGELOG
 
 
+## [0.0.5] - 2024-06-17
+
+- **Added**: logic for handling banned users under `handle_jwt`, the framework already has a built-in handling for banned users from logging in
+
 ## [0.0.4] - 2024-06-16
 
-- added unit tests for school_administration branch. Only able to add test for JWT checking, data validation and etc will be added in integration testing.
+- **Added**: unit tests for school_administration branch. Only able to add test for JWT checking, data validation and etc will be added in integration testing.
 - school_administration fully working as of now. All manual tests passed.
 
 ## [0.0.3] - 2024-06-12
 
-- created project folder for enrollment service
-- implemented school administration service where staff members with the appropriate access level can make changes to the right endpoints
-- made minor changes to login/api/serializers.py and views.py to include the user account type in the JWToken in relation to the above
+- **Added**: project folder for enrollment service
+- **Added**: implemented school administration service where staff members with the appropriate access level can make changes to the right endpoints
+- **Changed**: made minor changes to login/api/serializers.py and views.py to include the user account type in the JWToken in relation to the above
 - **Removed**: `allow_login` field removed from register/models.py as it is redundant with the default `is_active` column already inherited from the default `AUTH_USER_MODEL`
 
 ## [0.0.2] - 2024-05-15
 
-- created login service with JWT and it tested and working
+- **Added** created login service with JWT and it tested and working
 
 ## [0.0.1] - 2024-04-16
 
-- initial functionality created for the register service
-- need to add access levels for staff accounts
-- staff account requesting a registration key to be generated should be check if they have the appropriate level of access or authority to do so
+- **Added** initial functionality created for the register service
