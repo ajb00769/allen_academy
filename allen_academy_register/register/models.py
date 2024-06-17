@@ -20,6 +20,7 @@ from register.custom_utils.constants import (
     LAW_CHOICES,
     MASTERS_CHOICES,
     PHD_CHOICES,
+    EMPLOYEE_YEAR_LEVEL_CHOICES,
 )
 
 """
@@ -83,6 +84,7 @@ class RegistrationKey(models.Model):
             *LAW_CHOICES,
             *MASTERS_CHOICES,
             *PHD_CHOICES,
+            *EMPLOYEE_YEAR_LEVEL_CHOICES,
         ],
         blank=False,
         null=False,
@@ -286,6 +288,12 @@ class EmployeeDetail(models.Model):
         choices=EMPLOYEE_ACCOUNT_STATUS_CHOICES,
         max_length=1,
         default=EMPLOYEE_ACCOUNT_STATUS_CHOICES[0][0],
+        null=False,
+    )
+    teaching_year_lvl = models.CharField(
+        max_length=16,
+        choices=[*EMPLOYEE_ACCOUNT_STATUS_CHOICES],
+        blank=False,
         null=False,
     )
 

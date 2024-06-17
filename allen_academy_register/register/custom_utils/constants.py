@@ -117,3 +117,14 @@ PHD_CHOICES = [
     ("PHD6", "Doctorate 6"),
     ("PHD7", "Doctorate 7"),
 ]
+
+
+EMPLOYEE_YEAR_LEVEL_CHOICES = [
+    ("PHDT", "PHD Teacher"),
+    ("MSTT", "Masters Teacher"),
+    ("LAWT", "Law Teacher"),
+    ("COLT", "College Teacher"),
+    ("SHST", "High School Teacher"),
+    ("MDST", "Middle School Teacher"),
+    ("EMST", "Elementary School Teacher"),
+]

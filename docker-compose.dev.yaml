@@ -4,7 +4,7 @@ services:
       - ./allen_academy_enrollment/.env.dev
     build: ./allen_academy_enrollment
     depends_on:
-      - db
+      - login
     ports:
       - "8800:8800"
     volumes:
@@ -44,7 +44,7 @@ services:
       - ./allen_academy_school_administration/.env.dev
     build: ./allen_academy_school_administration
     depends_on:
-      - db 
+      - login
     ports:
       - "8880:8880"
     volumes:

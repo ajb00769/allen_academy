@@ -6,6 +6,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         token = super().get_token(user)
         token["account_type"] = user.account_type
+        token["user_id"] = user.pk
         return token
 
     def validate(self, attrs):
