@@ -4,7 +4,7 @@ services:
       - ./allen_academy_enrollment/.env.dev
     build: ./allen_academy_enrollment
     depends_on:
-      - login
+      - schadmin
     ports:
       - "8800:8800"
     volumes:

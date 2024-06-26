@@ -28,6 +28,12 @@ class AllAccountSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
 
+class StudentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentDetail
+        fields = "__all__"
+
+
 class EmployeeDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployeeDetail

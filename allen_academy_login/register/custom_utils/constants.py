@@ -50,8 +50,12 @@ FAMILY_TYPE_CHOICES = [
     ("G", "Legal Guardian"),
 ]
 
-"""
-This section is to be transferred to the enrollment service.
+
+SCHOLAR_TYPE_CHOICES = [
+    ("N", "Not a scholar"),
+    ("H", "Half scholarship"),
+    ("F", "Full scholarship"),
+]
 
 
 ELEMENTARY_SCHOOL_CHOICES = [
@@ -115,9 +119,13 @@ PHD_CHOICES = [
 ]
 
 
-SCHOLAR_TYPE_CHOICES = [
-    ("N", "Not a scholar"),
-    ("H", "Half scholarship"),
-    ("F", "Full scholarship"),
+EMPLOYEE_YEAR_LEVEL_CHOICES = [
+    ("REGS", "Regular Staff"),
+    ("PHDT", "PHD Teacher"),
+    ("MSTT", "Masters Teacher"),
+    ("LAWT", "Law Teacher"),
+    ("COLT", "College Teacher"),
+    ("SHST", "High School Teacher"),
+    ("MDST", "Middle School Teacher"),
+    ("EMST", "Elementary School Teacher"),
 ]
-"""

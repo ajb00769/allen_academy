@@ -6,8 +6,8 @@ from custom_common.jwt_handler import handle_jwt
 from edu_admin.api.serializers import (
     DepartmentSerializer,
     CourseSerializer,
-    SubjectSerializer,
-    ClassSubjectSerializer,
+    CourseSubjectSerializer,
+    SubjectBlockSerializer,
     ClassScheduleSerializer,
 )
 from edu_admin.custom_utils.custom import (
@@ -57,7 +57,7 @@ def create_subject(request):
     if "error" in result:
         return Response(result, status=status.HTTP_403_FORBIDDEN)
 
-    subject_serializer = SubjectSerializer(data=request.data)
+    subject_serializer = CourseSubjectSerializer(data=request.data)
 
     with transaction.atomic():
         if subject_serializer.is_valid():
@@ -81,7 +81,7 @@ def create_subject_block(request):
     except Exception as e:
         return Response({"error": e}, status=status.HTTP_406_NOT_ACCEPTABLE)
 
-    class_subject_serializer = ClassSubjectSerializer(data=request.data)
+    class_subject_serializer = SubjectBlockSerializer(data=request.data)
 
     with transaction.atomic():
         if class_subject_serializer.is_valid():

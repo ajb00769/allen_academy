@@ -120,6 +120,7 @@ PHD_CHOICES = [
 
 
 EMPLOYEE_YEAR_LEVEL_CHOICES = [
+    ("REGS", "Regular Staff"),
     ("PHDT", "PHD Teacher"),
     ("MSTT", "Masters Teacher"),
     ("LAWT", "Law Teacher"),

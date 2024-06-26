@@ -2,5 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("enroll", views.enroll, name="enroll"),
+    path("get_dept_list/", views.get_dept_list, name="dept_list"),
+    path("get_course_list/", views.get_course_list, name="course_list"),
+    path("get_subject_list/", views.get_subject_list, name="subject_list"),
+    path("get_subject_schedules/", views.get_subject_schedules, name="subject_sched"),
+    path("enroll_course/", views.enroll_course, name="enroll_course"),
+    path("enroll_subjects/", views.enroll_subjects, name="enroll_subjects"),
 ]

@@ -291,10 +291,10 @@ class EmployeeDetail(models.Model):
         null=False,
     )
     teaching_year_lvl = models.CharField(
+        choices=EMPLOYEE_YEAR_LEVEL_CHOICES,
         max_length=16,
-        choices=[*EMPLOYEE_ACCOUNT_STATUS_CHOICES],
+        default=EMPLOYEE_YEAR_LEVEL_CHOICES[0][0],
         blank=False,
-        null=False,
     )
 
     def is_dean(self) -> bool:

@@ -21,6 +21,8 @@ def login(request):
                     status=status.HTTP_403_FORBIDDEN,
                 )
             refresh = RefreshToken.for_user(user_obj)
+            refresh.payload["user_id"] = str(user_obj.pk)
+            refresh.payload["account_type"] = str(user_obj.account_type)
             return Response(
                 {"new_access_token": str(refresh.access_token)},
                 status=status.HTTP_200_OK,

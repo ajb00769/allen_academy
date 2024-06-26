@@ -9,9 +9,18 @@ from register.custom_utils.constants import (
     REGISTRATION_KEY_TYPES,
     SUFFIX_CHOICES,
     STUDENT_ACCOUNT_STATUS_CHOICES,
+    SCHOLAR_TYPE_CHOICES,
     EMPLOYEE_ACCOUNT_STATUS_CHOICES,
     EMPLOYEE_TYPE_CHOICES,
     FAMILY_TYPE_CHOICES,
+    ELEMENTARY_SCHOOL_CHOICES,
+    MIDDLE_SCHOOL_CHOICES,
+    HIGH_SCHOOL_CHOICES,
+    COLLEGE_LEVEL_CHOICES,
+    LAW_CHOICES,
+    MASTERS_CHOICES,
+    PHD_CHOICES,
+    EMPLOYEE_YEAR_LEVEL_CHOICES,
 )
 
 """
@@ -63,6 +72,20 @@ class RegistrationKey(models.Model):
     )
     generated_for = models.CharField(
         max_length=255,
+        blank=False,
+        null=False,
+    )
+    year_level = models.CharField(
+        choices=[
+            *ELEMENTARY_SCHOOL_CHOICES,
+            *MIDDLE_SCHOOL_CHOICES,
+            *HIGH_SCHOOL_CHOICES,
+            *COLLEGE_LEVEL_CHOICES,
+            *LAW_CHOICES,
+            *MASTERS_CHOICES,
+            *PHD_CHOICES,
+            *EMPLOYEE_YEAR_LEVEL_CHOICES,
+        ],
         blank=False,
         null=False,
     )
@@ -119,7 +142,6 @@ class AllAccount(AbstractUser):
         help_text="Specific user permissions.",
         verbose_name="common user permissions",
     )
-    allow_login = models.BooleanField(default=True, null=False)
 
 
 class StudentDetail(models.Model):
@@ -170,6 +192,47 @@ class StudentDetail(models.Model):
         default=STUDENT_ACCOUNT_STATUS_CHOICES[0][0],
         null=False,
     )
+    current_yr_lvl = models.CharField(
+        max_length=4,
+        choices=[
+            *ELEMENTARY_SCHOOL_CHOICES,
+            *MIDDLE_SCHOOL_CHOICES,
+            *HIGH_SCHOOL_CHOICES,
+            *COLLEGE_LEVEL_CHOICES,
+            *LAW_CHOICES,
+            *MASTERS_CHOICES,
+            *PHD_CHOICES,
+        ],
+        blank=False,
+        null=False,
+    )
+    scholarship_type = models.CharField(
+        choices=SCHOLAR_TYPE_CHOICES,
+        max_length=1,
+        default=SCHOLAR_TYPE_CHOICES[0][0],
+        blank=True,
+    )
+
+    def is_elementary(self) -> bool:
+        return self.current_yr_lvl in dict(ELEMENTARY_SCHOOL_CHOICES)
+
+    def is_middle_school(self) -> bool:
+        return self.current_yr_lvl in dict(MIDDLE_SCHOOL_CHOICES)
+
+    def is_high_school(self) -> bool:
+        return self.current_yr_lvl in dict(HIGH_SCHOOL_CHOICES)
+
+    def is_college(self) -> bool:
+        return self.current_yr_lvl in dict(COLLEGE_LEVEL_CHOICES)
+
+    def is_law(self) -> bool:
+        return self.current_yr_lvl in dict(LAW_CHOICES)
+
+    def is_masters(self) -> bool:
+        return self.current_yr_lvl in dict(MASTERS_CHOICES)
+
+    def is_phd(self) -> bool:
+        return self.current_yr_lvl in dict(PHD_CHOICES)
 
 
 class EmployeeDetail(models.Model):
@@ -227,6 +290,21 @@ class EmployeeDetail(models.Model):
         default=EMPLOYEE_ACCOUNT_STATUS_CHOICES[0][0],
         null=False,
     )
+    teaching_year_lvl = models.CharField(
+        choices=EMPLOYEE_YEAR_LEVEL_CHOICES,
+        max_length=16,
+        default=EMPLOYEE_YEAR_LEVEL_CHOICES[0][0],
+        blank=False,
+    )
+
+    def is_dean(self) -> bool:
+        return self.employment_type == "D"
+
+    def is_teacher(self) -> bool:
+        return self.employment_type == "T"
+
+    def is_admin_staff(self) -> bool:
+        return self.employment_type == "A"
 
 
 class ParentDetail(models.Model):
