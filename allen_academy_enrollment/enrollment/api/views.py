@@ -1,6 +1,7 @@
 import jwt
 from django.conf import settings
 from django.db import transaction
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -24,6 +25,8 @@ from enrollment.custom_utils.mapping import (
     teacher_student_yr_lvl_mapping,
     enrollment_mapping,
 )
+from enrollment.models import StudentCourse
+from enrollment.api.serializers import StudentSubjectBlockSerializer
 
 
 @api_view(["GET"])
@@ -136,7 +139,45 @@ def enroll_course(request):
     result = handle_jwt(request)
     if "error" in result:
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
-    pass  # enroll into the selected subject-block-schedule
+
+    try:
+        decoded = jwt.decode(
+            request.data.get("token"), settings.JWT_SECRET_KEY, algorithms=["HS256"]
+        )
+    except Exception:
+        return Response(
+            {"error": "unable_to_decode_jwt"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if decoded.get("account_type") != "STU":
+        return Response(
+            {"error": "unauthorized_account_type"}, status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    student_id = decoded.get("user_id")
+    course_code = request.data.get("course_code")
+
+    try:
+        has_course = StudentCourse.objects.get(student_id=student_id)
+        if has_course:
+            return Response(
+                {"error": "already_enrolled_to_a_course"},
+                status=status.HTTP_409_CONFLICT,
+            )
+    except ObjectDoesNotExist:
+        pass
+
+    payload = {"student_id": student_id, "course_code": course_code}
+    serializer = StudentSubjectBlockSerializer(data=payload)
+
+    with transaction.atomic():
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": serializer.data}, status=status.HTTP_200_OK)
+
+    return Response(
+        {"error": "unable_to_enroll_course"}, status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 @api_view(["POST"])
@@ -149,29 +190,63 @@ def enroll_subjects(request):
         decoded = jwt.decode(
             request.data.get("token"), settings.JWT_SECRET_KEY, algorithms=["HS256"]
         )
-        account_id = decoded.get("user_id")
-        account_type = decoded.get("account_type")
-        schedule_id = request.data.get("schedule_id")
+    except Exception:
+        return Response(
+            {"error": "unable_to_decode_jwt"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
+    account_id = decoded.get("user_id")
+    account_type = decoded.get("account_type")
+    schedule_id = request.data.get("schedule_id")
+
+    try:
         if any(var is None for var in [account_id, account_type, schedule_id]):
             raise Exception("required_field_is_null")
+        student_course_model = StudentCourse.objects.get(student_id=account_id)
+        student_course_id = student_course_model.course_id
+        ClassSchedule.objects.select_related(
+            "subject_block__course_subject__course"
+        ).filter(
+            schedule_id=schedule_id,
+            subject_block__course_subject__course__course_id=student_course_id,
+        ).values(
+            "course__course_id"
+        )
+    except ObjectDoesNotExist:
+        return Response(
+            {"error": "not_enrolled_to_course_of_subject"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        payload = {"account_id": account_id, "schedule_id": schedule_id}
+    payload = {"account_id": account_id, "schedule_id": schedule_id}
 
-        enrollment_serializer = enrollment_mapping[account_type]["serializer"]
-        serializer = enrollment_serializer(data=payload)
+    # TODO: please handle schedule conflicts
 
+    # get the data model for user-block/schedule to return results of all enrolled schedules
+    enrollment_model = enrollment_mapping.get(account_type).get("model")
+    existing_schedule_obj = enrollment_model.objects.filter(
+        account_id=account_id, many=True
+    )
+    existing_schedule_arr = [
+        schedule.get_schedule_details for schedule in existing_schedule_obj
+    ]
+    # sort by day of week and check for time overlaps
+    existing_schedule_arr.sort()
+
+    enrollment_serializer = enrollment_mapping.get(account_type).get("serializer")
+    serializer = enrollment_serializer(data=payload)
+
+    with transaction.atomic():
         if serializer.is_valid():
             serializer.save()
             return Response({"success": serializer.data}, status=status.HTTP_200_OK)
-        return Response(
-            {"error": "unable_to_enroll"}, status=status.HTTP_400_BAD_REQUEST
-        )
 
-        with transaction.atomic():
-            pass
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(
+        {"error": "unable_to_enroll_subject"}, status=status.HTTP_400_BAD_REQUEST
+    )
 
 
 @api_view(["POST"])

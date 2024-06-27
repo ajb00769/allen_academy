@@ -8,7 +8,10 @@ from register.custom_utils.constants import (
     MIDDLE_SCHOOL_CHOICES,
     ELEMENTARY_SCHOOL_CHOICES,
 )
-from enrollment.models import StudentSubjectBlock, EmployeeSubjectBlock
+from enrollment.models import (
+    StudentSubjectBlock,
+    EmployeeSubjectBlock,
+)
 from enrollment.api.serializers import (
     StudentSubjectBlockSerializer,
     EmployeeSubjectBlockSerializer,

@@ -1,4 +1,5 @@
 from django.db import models
+from edu_admin.models import ClassSchedule
 
 
 class StudentCourse(models.Model):
@@ -34,6 +35,9 @@ class StudentSubjectBlock(models.Model):
         null=False,
     )
 
+    def get_schedule_details(self):
+        return ClassSchedule.objects.get(schedule_id=self.schedule_id)
+
 
 class EmployeeSubjectBlock(models.Model):
     account_id = models.ForeignKey(
@@ -50,3 +54,6 @@ class EmployeeSubjectBlock(models.Model):
         blank=False,
         null=False,
     )
+
+    def get_schedule_details(self):
+        return ClassSchedule.objects.get(schedule_id=self.schedule_id)
