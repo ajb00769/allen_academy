@@ -36,7 +36,10 @@ class StudentSubjectBlock(models.Model):
     )
 
     def get_schedule_details(self):
-        return ClassSchedule.objects.get(schedule_id=self.schedule_id)
+        return ClassSchedule.objects.get(
+            schedule_id=self.schedule_id.schedule_id,
+            active_flag=True,
+        )
 
 
 class EmployeeSubjectBlock(models.Model):
@@ -56,4 +59,7 @@ class EmployeeSubjectBlock(models.Model):
     )
 
     def get_schedule_details(self):
-        return ClassSchedule.objects.get(schedule_id=self.schedule_id)
+        return ClassSchedule.objects.get(
+            schedule_id=self.schedule_id.schedule_id,
+            active_flag=True,
+        )

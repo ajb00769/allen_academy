@@ -200,6 +200,11 @@ def enroll_subjects(request):
     account_type = decoded.get("account_type")
     schedule_id = request.data.get("schedule_id")
 
+    if account_type == "PAR":
+        return Response(
+            {"error": "invalid_account_type"}, status=status.HTTP_403_FORBIDDEN
+        )
+
     try:
         if any(var is None for var in [account_id, account_type, schedule_id]):
             raise Exception("required_field_is_null")
@@ -214,10 +219,11 @@ def enroll_subjects(request):
             "course__course_id"
         )
     except ObjectDoesNotExist:
-        return Response(
-            {"error": "not_enrolled_to_course_of_subject"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        if account_type == "STU":
+            return Response(
+                {"error": "not_enrolled_to_course_of_subject"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -225,16 +231,26 @@ def enroll_subjects(request):
 
     # TODO: please handle schedule conflicts
 
+    proposed_schedule = ClassSchedule.objects.get(schedule_id=schedule_id)
     # get the data model for user-block/schedule to return results of all enrolled schedules
     enrollment_model = enrollment_mapping.get(account_type).get("model")
-    existing_schedule_obj = enrollment_model.objects.filter(
-        account_id=account_id, many=True
-    )
+    existing_schedule_obj = enrollment_model.objects.filter(account_id=account_id)
     existing_schedule_arr = [
-        schedule.get_schedule_details for schedule in existing_schedule_obj
+        schedule.get_schedule_details()
+        for schedule in existing_schedule_obj
+        if schedule.get_schedule_details().day_of_wk == proposed_schedule.day_of_wk
+        and (
+            proposed_schedule.start_time <= schedule.get_schedule_details().end_time
+            or proposed_schedule.end_time <= schedule.get_schedule_details().start_time
+        )
     ]
-    # sort by day of week and check for time overlaps
-    existing_schedule_arr.sort()
+    # print(f"***\n\n\n\nDEBUG ATTENTION: {existing_schedule_arr}\n\n\n\n***")
+    # an array of ClassSchedule objects that have the same day of week of the prospect schedule to add for the user
+
+    if existing_schedule_arr:
+        return Response(
+            {"error": "schedule_conflict"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     enrollment_serializer = enrollment_mapping.get(account_type).get("serializer")
     serializer = enrollment_serializer(data=payload)
