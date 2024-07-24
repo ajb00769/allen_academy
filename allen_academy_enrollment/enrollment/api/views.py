@@ -19,6 +19,7 @@ from edu_admin.api.serializers import (
     DepartmentSerializer,
     CourseSerializer,
     CourseSubjectSerializer,
+    SubjectBlockSerializer,
     ClassScheduleSerializer,
 )
 from enrollment.custom_utils.mapping import (
@@ -119,7 +120,7 @@ def get_subject_list(request):
 
 
 @api_view(["POST"])
-def get_subject_schedules(request):
+def get_subject_schedule_list(request):
     result = handle_jwt(request)
     if "error" in result:
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
@@ -181,7 +182,7 @@ def enroll_course(request):
 
 
 @api_view(["POST"])
-def enroll_subjects(request):
+def enroll_subject_schedule(request):
     result = handle_jwt(request)
     if "error" in result:
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
@@ -240,8 +241,8 @@ def enroll_subjects(request):
         for schedule in existing_schedule_obj
         if schedule.get_schedule_details().day_of_wk == proposed_schedule.day_of_wk
         and (
-            proposed_schedule.start_time <= schedule.get_schedule_details().end_time
-            or proposed_schedule.end_time <= schedule.get_schedule_details().start_time
+            proposed_schedule.start_time < schedule.get_schedule_details().end_time
+            or proposed_schedule.end_time < schedule.get_schedule_details().start_time
         )
     ]
     # print(f"***\n\n\n\nDEBUG ATTENTION: {existing_schedule_arr}\n\n\n\n***")
@@ -266,5 +267,62 @@ def enroll_subjects(request):
 
 
 @api_view(["POST"])
-def get_enrolled_subjects(request):
-    pass
+def get_user_schedule(request):
+    result = handle_jwt(request)
+    if "error" in result:
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        decoded = jwt.decode(
+            request.data.get("token"), settings.JWT_SECRET_KEY, algorithms=["HS256"]
+        )
+    except Exception:
+        return Response(
+            {"error": "unable_to_decode_jwt"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    account_id = decoded.get("user_id")
+    account_type = decoded.get("account_type")
+
+    enrollment_model = enrollment_mapping.get(account_type).get("model")
+
+    schedules = enrollment_model.objects.filter(account_id=account_id).select_related(
+        "schedule_id__block_id__subject_code"
+    )
+
+    desired_keys = [
+        "block_id",
+        "semester",
+        "start_date",
+        "end_date",
+        "subject_code",
+        "day_of_wk",
+        "room_no",
+        "start_time",
+        "end_time",
+        "subject_type",
+        "subject_name",
+        "subject_units",
+        "subject_tuition",
+        "course_yr_lvl",
+        "course_code",
+        "first_name",
+        "middle_name",
+        "last_name",
+        "suffix",
+    ]
+
+    raw_sched_list = [
+        {
+            **SubjectBlockSerializer(schedule.schedule_id.block_id).data,
+            **ClassScheduleSerializer(schedule.schedule_id).data,
+            **CourseSubjectSerializer(schedule.schedule_id.block_id.subject_code).data,
+            **EmployeeDetailSerializer(schedule.schedule_id.block_id.professor).data
+        }
+        for schedule in schedules if schedule.schedule_id.active_flag == True
+    ]
+
+    sched_list = [{k: v for k, v in item.items() if k in desired_keys} for item in raw_sched_list]
+
+    return Response({"result": sched_list}, status=status.HTTP_200_OK)
