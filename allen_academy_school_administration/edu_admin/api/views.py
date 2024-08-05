@@ -1,8 +1,14 @@
+import jwt
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.db import transaction
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from datetime import datetime
 from custom_common.jwt_handler import handle_jwt
+from register.models import EmployeeDetail
+from edu_admin.models import Department
 from edu_admin.api.serializers import (
     DepartmentSerializer,
     CourseSerializer,
@@ -22,15 +28,61 @@ def create_department(request):
     if "error" in result:
         return Response(result, status=status.HTTP_403_FORBIDDEN)
 
-    department_serializer = DepartmentSerializer(data=request.data)
+    jwt_decode = jwt.decode(
+        request.data.get("token"), settings.JWT_SECRET_KEY, algorithms=["HS256"]
+    )
+    user_id = jwt_decode.get("user_id")
 
-    with transaction.atomic():
-        if department_serializer.is_valid():
-            department_serializer.save()
-            return Response(department_serializer.data, status=status.HTTP_200_OK)
+    clean_input = request.data.copy()
+    clean_input.pop("created_on", None)
+    clean_input.pop("updated_on", None)
+    clean_input.update({"updated_on": datetime.now()})
+
+    try:
+        existing = Department.objects.get(dept_id=clean_input.get("dept_id"))
+        existing.dept_id = clean_input.get("dept_id")
+        existing.dept_parent = clean_input.get("dept_parent")
+        existing.dept_name = clean_input.get("dept_name")
+
+        try:
+            existing.dept_head = EmployeeDetail.objects.get(
+                account_id=clean_input.get("dept_head")
+            )
+            existing.updated_by = EmployeeDetail.objects.get(account_id=user_id)
+        except ObjectDoesNotExist:
+            return Response(
+                {"error": "employee_invalid"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        except MultipleObjectsReturned:
+            return Response(
+                {"error": "data_integrity_error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        existing.updated_on = datetime.now()
+        existing.save
+
+        existing_serializer = DepartmentSerializer(existing)
+        return Response(existing_serializer.data, status=status.HTTP_200_OK)
+    except ObjectDoesNotExist:
+        clean_input.update({"created_on": datetime.now()})
+        clean_input.pop("updated_on", None)
+        department_serializer = DepartmentSerializer(data=clean_input)
+
+        with transaction.atomic():
+            if department_serializer.is_valid():
+                department_serializer.save()
+                return Response(
+                    department_serializer.data, status=status.HTTP_201_CREATED
+                )
+            return Response(
+                {"error": department_serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    except MultipleObjectsReturned:
         return Response(
-            {"error": department_serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST,
+            {"error": "data_integrity_error"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 

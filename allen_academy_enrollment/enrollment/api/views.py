@@ -318,11 +318,15 @@ def get_user_schedule(request):
             **SubjectBlockSerializer(schedule.schedule_id.block_id).data,
             **ClassScheduleSerializer(schedule.schedule_id).data,
             **CourseSubjectSerializer(schedule.schedule_id.block_id.subject_code).data,
-            **EmployeeDetailSerializer(schedule.schedule_id.block_id.professor).data
+            **EmployeeDetailSerializer(schedule.schedule_id.block_id.professor).data,
         }
-        for schedule in schedules if schedule.schedule_id.active_flag == True
+        for schedule in schedules
+        if schedule.schedule_id.active_flag
+        if schedule.schedule_id.active_flag
     ]
 
-    sched_list = [{k: v for k, v in item.items() if k in desired_keys} for item in raw_sched_list]
+    sched_list = [
+        {k: v for k, v in item.items() if k in desired_keys} for item in raw_sched_list
+    ]
 
     return Response({"result": sched_list}, status=status.HTTP_200_OK)
