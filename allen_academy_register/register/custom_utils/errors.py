@@ -14,6 +14,11 @@ INVALID_ARGS_ERROR = {
     "error_code": "AAR-00002",
 }
 
+EMAIL_ALREADY_REGISTERED_ERROR = {
+    "error": "Email already registered with an existing user.",
+    "error_code": "AAR-00003",
+}
+
 UNEXPECTED_ERROR = {
     "error": "Something unexpected went wrong. Please contact the developer.",
     "error_code": "AAR-99999",

@@ -1,5 +1,5 @@
 from django.db import IntegrityError, transaction
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -24,6 +24,7 @@ from register.custom_utils.custom import (
 from register.custom_utils.errors import (
     NULL_ARGS_ERROR,
     INVALID_ARGS_ERROR,
+    EMAIL_ALREADY_REGISTERED_ERROR,
     UNEXPECTED_ERROR,
 )
 import logging
@@ -41,6 +42,26 @@ def register(request):
     """
 
     func_name = register.__name__
+
+    """
+    # BUGFIX: K61Z8Sna - FIXED
+    Function/view did not previously check if email is already registered.
+    Although the data model/db has as unique restraint for the username/email
+    it would inefficient to allow the operation to continue before that happens
+    so early termination of the operation/error feedback is added.
+
+    NOTE: noticed something that might be an issue where if the wrong year_level
+    is entered in reg_key and is attempted to be registered, this function will
+    return an error about a required field being missing but it's actually a
+    rejection of the invalid year_level - account_type relationship.
+    """
+    email = clean_excess_spaces_from_string(request.data.get("email"))
+
+    try:
+        if AllAccount.objects.get(email=email):
+            return Response(EMAIL_ALREADY_REGISTERED_ERROR, status=400)
+    except ObjectDoesNotExist:
+        pass
 
     serializer_map = {
         "STU": StudentDetailSerializer,
@@ -106,7 +127,7 @@ def register(request):
             account_serializer_data.update(
                 {
                     "account_id": saved_account_id,
-                    "username": request.data.get("email"),
+                    "username": email,
                     "password": make_password(account_serializer_data.get("password")),
                     "account_type": key_type,
                 }
