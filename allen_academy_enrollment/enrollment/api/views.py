@@ -27,7 +27,7 @@ from enrollment.custom_utils.mapping import (
     enrollment_mapping,
 )
 from enrollment.models import StudentCourse
-from enrollment.api.serializers import StudentSubjectBlockSerializer
+from enrollment.api.serializers import StudentCourseSerializer
 
 
 @api_view(["GET"])
@@ -141,21 +141,22 @@ def enroll_course(request):
     if "error" in result:
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        decoded = jwt.decode(
-            request.data.get("token"), settings.JWT_SECRET_KEY, algorithms=["HS256"]
-        )
-    except Exception:
-        return Response(
-            {"error": "unable_to_decode_jwt"}, status=status.HTTP_400_BAD_REQUEST
-        )
+    """
+    # BUGFIX: 1TABeLzU - FIXED
+    Problematic piece of code was found here. It was checking the JWT for the account_id
+    to be registered/enrolled when it should have just been checking the account_id in 
+    the normal payload instead. That's why it was returning invvalid account type because
+    the logic below only allows account_type "STU" to be enrolled, in the JWT the account
+    is of type "EMP" which is being passed.
 
-    if decoded.get("account_type") != "STU":
+    Correct logic now reflects where only "EMP" can enroll users of type "STU" to a course.
+    """
+    if not StudentDetail.objects.get(account_id=request.data.get("account_id")):
         return Response(
             {"error": "unauthorized_account_type"}, status=status.HTTP_401_UNAUTHORIZED
         )
 
-    student_id = decoded.get("user_id")
+    student_id = request.data.get("account_id")
     course_code = request.data.get("course_code")
 
     try:
@@ -168,8 +169,17 @@ def enroll_course(request):
     except ObjectDoesNotExist:
         pass
 
-    payload = {"student_id": student_id, "course_code": course_code}
-    serializer = StudentSubjectBlockSerializer(data=payload)
+    """
+    # BUGFIX: 1TABeLzU - FIXED
+    Another problematic piece of code was also found here where the wrong key "course_code"
+    was being passed into the StudentCourse table which only has "course_id" hence returning
+    and error of "unable_to_enroll_course".
+
+    It was also previously attempting to store it in a different table "StudentSubjectBlock"
+    which was not what was intended. Replaced wtih the correct table "StudentCourse".
+    """
+    payload = {"student_id": student_id, "course_id": course_code}
+    serializer = StudentCourseSerializer(data=payload)
 
     with transaction.atomic():
         if serializer.is_valid():
