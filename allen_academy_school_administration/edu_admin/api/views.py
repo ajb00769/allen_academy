@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.db import transaction
 from django.conf import settings
+from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from datetime import datetime
 from custom_common.jwt_handler import handle_jwt
@@ -59,8 +60,14 @@ def create_department(request):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        existing.updated_on = datetime.now()
-        existing.save
+        """
+        # BUGFIX: 94e6oWUB - FIXED
+        Bug was found here, data was not saving because of the missing () in .save
+        Also fixed a warning about a non-timezone-aware datetime object being passed
+        into the db. Using django.utils.timezone instead of datetime.datetime
+        """
+        existing.updated_on = timezone.now()
+        existing.save()
 
         existing_serializer = DepartmentSerializer(existing)
         return Response(existing_serializer.data, status=status.HTTP_200_OK)
