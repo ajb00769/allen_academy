@@ -19,6 +19,21 @@ EMAIL_ALREADY_REGISTERED_ERROR = {
     "error_code": "AAR-00003",
 }
 
+KEY_TYPE_VALUE_ERROR = {
+    "error": "Value not valid for this particular key type.",
+    "error_code": "AAR-00004",
+}
+
+DATA_DOES_NOT_MATCH_ERROR = {
+    "error": "Data stored in the registration key does not match data in the payload.",
+    "error_code": "AAR-00005",
+}
+
+STUDENT_DOES_NOT_EXIST = {
+    "error": "Student refrenced does not exist.",
+    "error_code": "AAR-00006",
+}
+
 UNEXPECTED_ERROR = {
     "error": "Something unexpected went wrong. Please contact the developer.",
     "error_code": "AAR-99999",

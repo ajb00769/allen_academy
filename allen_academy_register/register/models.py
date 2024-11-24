@@ -85,6 +85,7 @@ class RegistrationKey(models.Model):
             *MASTERS_CHOICES,
             *PHD_CHOICES,
             *EMPLOYEE_YEAR_LEVEL_CHOICES,
+            *FAMILY_TYPE_CHOICES,
         ],
         blank=False,
         null=False,

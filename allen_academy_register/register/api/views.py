@@ -7,6 +7,7 @@ from register.models import (
     RegistrationKey,
     AllAccountId,
     AllAccount,
+    StudentDetail,
 )
 from register.api.serializers import (
     RegistrationKeySerializer,
@@ -25,7 +26,21 @@ from register.custom_utils.errors import (
     NULL_ARGS_ERROR,
     INVALID_ARGS_ERROR,
     EMAIL_ALREADY_REGISTERED_ERROR,
+    KEY_TYPE_VALUE_ERROR,
+    DATA_DOES_NOT_MATCH_ERROR,
+    STUDENT_DOES_NOT_EXIST,
     UNEXPECTED_ERROR,
+)
+from register.custom_utils.constants import (
+    ELEMENTARY_SCHOOL_CHOICES,
+    MIDDLE_SCHOOL_CHOICES,
+    HIGH_SCHOOL_CHOICES,
+    COLLEGE_LEVEL_CHOICES,
+    LAW_CHOICES,
+    MASTERS_CHOICES,
+    PHD_CHOICES,
+    EMPLOYEE_YEAR_LEVEL_CHOICES,
+    FAMILY_TYPE_CHOICES,
 )
 import logging
 
@@ -132,6 +147,21 @@ def register(request):
                     "account_type": key_type,
                 }
             )
+            if key_type == "PAR":
+                try:
+                    stored_relationship = RegistrationKey.objects.get(
+                        year_level=request.data.get("year_level")
+                    ).year_level
+
+                    if request.data.get("year_level") != stored_relationship:
+                        reg_key_obj = RegistrationKey.objects.get(
+                            generated_key=request.data.get("reg_key")
+                        )
+                        reg_key_obj.key_used = False
+                        reg_key_obj.save()
+                        return Response(DATA_DOES_NOT_MATCH_ERROR, status=400)
+                except ObjectDoesNotExist:
+                    return Response(NULL_ARGS_ERROR, status=400)
             account_serializer = AllAccountSerializer(data=account_serializer_data)
 
             if not account_serializer.is_valid():
@@ -143,9 +173,21 @@ def register(request):
                 account_id=account_serializer.data.get("account_id")
             )
             detail_serializer_data = request.data.copy()
-            detail_serializer_data.update(
-                {"current_yr_lvl": validated_reg_key.get("year_level")}
-            )
+            if key_type == "STU":
+                detail_serializer_data.update(
+                    {"current_yr_lvl": validated_reg_key.get("year_level")}
+                )
+            elif key_type == "PAR":
+                try:
+                    student = StudentDetail.objects.get(
+                        account_id=request.data.get("student")
+                    )
+                    detail_serializer_data.update({"student": student})
+                except ObjectDoesNotExist:
+                    return Response(STUDENT_DOES_NOT_EXIST, status=400)
+
+                detail_serializer_data.update({"relationship": stored_relationship})
+
             detail_serializer_data.update({"account_id": account_object.account_id})
             detail_serializer = detail_serializer_class(data=detail_serializer_data)
 
@@ -155,6 +197,11 @@ def register(request):
 
             return Response(detail_serializer.data, status=201)
     except Exception as e:
+        reg_key_obj = RegistrationKey.objects.get(
+            generated_key=request.data.get("reg_key")
+        )
+        reg_key_obj.key_used = False
+        reg_key_obj.save()
         return handle_exception(e, func_name=func_name)
 
 
@@ -164,11 +211,36 @@ def reg_key(request):
 
     client_data = request.data.copy()
     client_data.pop("key_used", None)
+    client_data_key_type = clean_excess_spaces_from_string(client_data.get("key_type"))
+    client_data_year_level = clean_excess_spaces_from_string(
+        client_data.get("year_level")
+    )
 
     gen_for: str = clean_excess_spaces_from_string(client_data.get("generated_for"))
 
-    if not gen_for or not client_data.get("key_type"):
+    if not gen_for or not client_data_key_type or not client_data_year_level:
         return Response(NULL_ARGS_ERROR, status=400)
+
+    if client_data_key_type == "STU":
+        combined_type_list = (
+            ELEMENTARY_SCHOOL_CHOICES
+            + MIDDLE_SCHOOL_CHOICES
+            + HIGH_SCHOOL_CHOICES
+            + COLLEGE_LEVEL_CHOICES
+            + LAW_CHOICES
+            + MASTERS_CHOICES
+            + PHD_CHOICES
+        )
+        if not any(item[0] == client_data_year_level for item in combined_type_list):
+            return Response(KEY_TYPE_VALUE_ERROR, status=400)
+    elif client_data_key_type == "EMP":
+        if not any(
+            item[0] == client_data_year_level for item in EMPLOYEE_YEAR_LEVEL_CHOICES
+        ):
+            return Response(KEY_TYPE_VALUE_ERROR, status=400)
+    elif client_data_key_type == "PAR":
+        if not any(item[0] == client_data_year_level for item in FAMILY_TYPE_CHOICES):
+            return Response(KEY_TYPE_VALUE_ERROR, status=400)
 
     if len(gen_for.split()) < 2:
         return Response({"error": "Name too short."}, status=400)
