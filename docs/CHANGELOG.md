@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [0.1.1] - 2024-11-25
+- **Fixed**: Bug where a student gets an invalid account type error when attempting to register caused by code attempting to store data into the wrong table.
+- **Fixed**: Bug where updating a department returns the correct JSON response but no data is updated on the DB.
+- **Fixed**: Bug where the wrong error message appears when a username/email is already taken.
+- **Changed**: Registration logic to termiante the operation earlier in the code when username/email is already taken.
+- **Fixed**: Bug where you can register an account without validating the year level or year teaching level of the teacher or the relationship of a parent and student.
+
+
 ## [0.1.0] - 2024-08-06
 - **Fixed**: corrected logic of `create_department` in the enrollment API. It now records the `created_on` and `updated_on` fields correctly.
 - **Updated**: Updated `TestingLogs.ods` to reflect the current tests done. More will be added to this document moving forward
