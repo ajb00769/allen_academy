@@ -51,6 +51,21 @@ services:
       - ./allen_academy_school_administration:/usr/src/app
     networks:
       - backend
+  
+  # frontend:
+  #   env_file:
+  #     - ./allen_academy_frontend/.env.dev
+  #   build:
+  #     context: ./allen_academy_frontend
+  #     dockerfile: ./Dockerfile.dev
+  #   depends_on:
+  #     - login
+  #   ports:
+  #     - "5176:80"
+  #   volumes:
+  #     - ./allen_academy_frontend:/usr/src/app
+  #   networks:
+  #     - backend
 
   db:
     image: postgres
