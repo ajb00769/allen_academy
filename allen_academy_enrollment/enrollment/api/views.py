@@ -1,7 +1,7 @@
 import jwt
 from django.conf import settings
 from django.db import transaction
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -133,6 +133,28 @@ def get_subject_schedule_list(request):
         many=True,
     ).data
     return Response({"result": block_schedules}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def get_course(request):
+    result = handle_jwt(request)
+    if "error" in result:
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+    student_id = result.get("account_id")
+
+    try:
+        enrolled_course = StudentCourse.objects.get(student_id=student_id)
+        course_name = Course.objects.get(course_code=enrolled_course)
+    except MultipleObjectsReturned:
+        return Response(
+            {"error": "data_integrity_issue"}, status=status.HTTP_409_CONFLICT
+        )
+    except ObjectDoesNotExist:
+        return Response(
+            {"warning": "not_enrolled_to_course"}, status=status.HTTP_200_OK
+        )
+    return Response({"course": course_name}, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])

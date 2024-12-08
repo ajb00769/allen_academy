@@ -17,4 +17,5 @@ urlpatterns = [
         name="enroll_subject_schedule",
     ),
     path("get_user_schedule/", views.get_user_schedule, name="user_schedule"),
+    path("get_course/", views.get_course, name="get_course"),
 ]
