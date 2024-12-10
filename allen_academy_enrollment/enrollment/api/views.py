@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from custom_common.jwt_handler import handle_jwt
+from custom_common.jwt_handler import handle_jwt, handle_jwt_student
 from register.models import EmployeeDetail, StudentDetail
 from register.api.serializers import EmployeeDetailSerializer, StudentDetailSerializer
 from edu_admin.models import (
@@ -137,15 +137,28 @@ def get_subject_schedule_list(request):
 
 @api_view(["POST"])
 def get_course(request):
-    result = handle_jwt(request)
+    result = handle_jwt_student(request)
     if "error" in result:
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-    student_id = result.get("account_id")
+    student_id = result.get("user_id")
 
     try:
-        enrolled_course = StudentCourse.objects.get(student_id=student_id)
-        course_name = Course.objects.get(course_code=enrolled_course)
+        student_course_data = StudentCourseSerializer(
+            StudentCourse.objects.get(student_id=student_id)
+        ).data
+        enrolled_course = student_course_data.get("course_id")
+
+        course_data = CourseSerializer(
+            Course.objects.get(course_code=enrolled_course)
+        ).data
+        course_name = course_data.get("course_name")
+        course_dept_id = course_data.get("dept_id")
+
+        department_data = DepartmentSerializer(
+            Department.objects.get(dept_id=course_dept_id)
+        ).data
+        department_name = department_data.get("dept_name")
     except MultipleObjectsReturned:
         return Response(
             {"error": "data_integrity_issue"}, status=status.HTTP_409_CONFLICT
@@ -154,7 +167,13 @@ def get_course(request):
         return Response(
             {"warning": "not_enrolled_to_course"}, status=status.HTTP_200_OK
         )
-    return Response({"course": course_name}, status=status.HTTP_200_OK)
+    return Response(
+        {
+            "course": course_name,
+            "college": department_name,
+        },
+        status=status.HTTP_200_OK,
+    )
 
 
 @api_view(["POST"])

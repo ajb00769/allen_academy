@@ -4,6 +4,7 @@ import LoggedInAs from './LoggedInAs';
 
 function Banner(props) {
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [collegeName, setCollegeName] = useState('');
   const [courseName, setCourseName] = useState('');
   const [bannerError, setBannerError] = useState(null);
   const loginTicker = <LoggedInAs username={props.username} />;
@@ -19,6 +20,7 @@ function Banner(props) {
     if (data.course) {
       setIsEnrolled(true);
       setCourseName(data.course);
+      setCollegeName(data.college);
     } else if (data.warning) {
       setIsEnrolled(false);
       setBannerError(data.warning);
@@ -35,7 +37,7 @@ function Banner(props) {
       <>
         {loginTicker}
         <div className="text-center">
-          <p className="h2">Welcome to the college of {props.college}</p>
+          <p className="h2">Welcome to the college of {collegeName}</p>
           <p className="h3">You have enrolled in the {courseName} course.</p>
         </div>
       </>
