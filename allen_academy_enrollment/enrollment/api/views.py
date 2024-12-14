@@ -5,7 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from custom_common.jwt_handler import handle_jwt, handle_jwt_student
+from custom_common.jwt_handler import handle_jwt
 from register.models import EmployeeDetail, StudentDetail
 from register.api.serializers import EmployeeDetailSerializer, StudentDetailSerializer
 from edu_admin.models import (
@@ -28,6 +28,8 @@ from enrollment.custom_utils.mapping import (
 )
 from enrollment.models import StudentCourse
 from enrollment.api.serializers import StudentCourseSerializer
+from register.models import AllAccount
+from register.api.serializers import AllAccountSerializer
 
 
 @api_view(["GET"])
@@ -137,40 +139,55 @@ def get_subject_schedule_list(request):
 
 @api_view(["POST"])
 def get_course(request):
-    result = handle_jwt_student(request)
+    result = handle_jwt(request)
     if "error" in result:
         return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-    student_id = result.get("user_id")
+    account_id = result.get("user_id")
 
     try:
-        student_course_data = StudentCourseSerializer(
-            StudentCourse.objects.get(student_id=student_id)
+        account_data = AllAccountSerializer(
+            AllAccount.objects.get(account_id=account_id)
         ).data
-        enrolled_course = student_course_data.get("course_id")
+        account_type = account_data.get("account_type")
 
-        course_data = CourseSerializer(
-            Course.objects.get(course_code=enrolled_course)
-        ).data
-        course_name = course_data.get("course_name")
-        course_dept_id = course_data.get("dept_id")
+        if account_type == "STU":
+            student_course_data = StudentCourseSerializer(
+                StudentCourse.objects.get(student_id=account_id)
+            ).data
+            enrolled_course = student_course_data.get("course_id")
 
-        department_data = DepartmentSerializer(
-            Department.objects.get(dept_id=course_dept_id)
-        ).data
-        department_name = department_data.get("dept_name")
+            course_data = CourseSerializer(
+                Course.objects.get(course_code=enrolled_course)
+            ).data
+            course_name = course_data.get("course_name")
+            course_dept_id = course_data.get("dept_id")
+
+            department_data = DepartmentSerializer(
+                Department.objects.get(dept_id=course_dept_id)
+            ).data
+            department_name = department_data.get("dept_name")
+
+        elif account_type == "EMP":
+            return Response({"account_type": account_type}, status=status.HTTP_200_OK)
+
     except MultipleObjectsReturned:
         return Response(
             {"error": "data_integrity_issue"}, status=status.HTTP_409_CONFLICT
         )
     except ObjectDoesNotExist:
         return Response(
-            {"warning": "not_enrolled_to_course"}, status=status.HTTP_200_OK
+            {
+                "warning": "not_enrolled_to_course",
+                "account_type": account_type,
+            },
+            status=status.HTTP_200_OK,
         )
     return Response(
         {
             "course": course_name,
             "college": department_name,
+            "account_type": result.get("account_type"),
         },
         status=status.HTTP_200_OK,
     )
