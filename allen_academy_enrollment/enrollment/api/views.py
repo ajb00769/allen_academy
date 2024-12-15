@@ -390,7 +390,6 @@ def get_user_schedule(request):
         }
         for schedule in schedules
         if schedule.schedule_id.active_flag
-        if schedule.schedule_id.active_flag
     ]
 
     sched_list = [
