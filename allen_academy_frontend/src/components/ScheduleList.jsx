@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { userScheduleAPI } from "./constants";
+import Cookies from 'js-cookie';
 
-function ScheduleList(props) {
+function ScheduleList() {
   const [scheduleList, setScheduleList] = useState([]);
   const [noSchedules, setNoSchedules] = useState(false);
   const formData = new FormData();
-  formData.append('token', props.access);
+  formData.append('token', Cookies.get('accessToken'));
 
   useEffect(() => {
     async function fetchData() {
@@ -20,7 +21,6 @@ function ScheduleList(props) {
           console.log(data.result);
           setScheduleList(data.result);
         } else {
-          console.log("no schedules");
           setNoSchedules(true);
         }
       } catch (error) {
@@ -35,7 +35,7 @@ function ScheduleList(props) {
     return (
       <div className="text-center">
         <div>
-          <p>You are not enrolled to any subjects. Please enroll to see your schedules.</p>
+          <h2>You are not enrolled to any subjects. Please enroll to see your schedules.</h2>
         </div>
       </div>
     );

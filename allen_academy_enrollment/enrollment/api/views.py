@@ -177,17 +177,14 @@ def get_course(request):
         )
     except ObjectDoesNotExist:
         return Response(
-            {
-                "warning": "not_enrolled_to_course",
-                "account_type": account_type,
-            },
-            status=status.HTTP_200_OK,
+            {"warning": "not_enrolled_to_course"}, status=status.HTTP_200_OK
         )
+    except Exception as e:
+        return Response({"warning": str(e)}, status=status.HTTP_501_NOT_IMPLEMENTED)
     return Response(
         {
             "course": course_name,
             "college": department_name,
-            "account_type": result.get("account_type"),
         },
         status=status.HTTP_200_OK,
     )

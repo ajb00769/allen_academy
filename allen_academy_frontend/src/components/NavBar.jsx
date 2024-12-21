@@ -1,3 +1,11 @@
+import Cookies from 'js-cookie';
+
+const handleLogout = () => {
+	Object.keys(Cookies.get()).forEach(cookie => {
+		Cookies.remove(cookie);
+	})
+}
+
 function NavBar() {
 	return (
 		<>
@@ -10,16 +18,16 @@ function NavBar() {
 					<div className="collapse navbar-collapse justify-content-end" id="navbarNav">
 						<ul className="navbar-nav">
 							<li className="nav-item">
-								<a className="nav-link active" aria-current="page" href="#">Home</a>
+								<a className="nav-link" href="/home">Home</a>
 							</li>
 							<li className="nav-item">
-								<a className="nav-link disabled" aria-disabled="true">Enrollment</a>
+								<a className="nav-link" href="/enrollment">Enrollment</a>
 							</li>
 							<li className="nav-item">
-								<a className="nav-link" href="#">Schedule</a>
+								<a className="nav-link" href="/schedule">Schedule</a>
 							</li>
 							<li className="nav-item">
-								<a className="nav-link text-danger" href="/">Logout</a>
+								<a className="nav-link text-danger" onClick={handleLogout} href="/">Logout</a>
 							</li>
 						</ul>
 					</div>

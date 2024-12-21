@@ -1,15 +1,11 @@
-import { useEffect, useState } from 'react';
-import { loginAPI } from './constants';
-import Dashboard from './Dashboard';
+import { useState } from 'react';
+import { loginAPI } from '../components/constants';
+import Cookies from 'js-cookie';
 
 function LoginPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginError, setLoginError] = useState(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loggedInUsername, setLoggedInUsername] = useState('');
-  const [accessToken, setAccessToken] = useState('');
-  const [refreshToken, setRefreshToken] = useState('');
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -27,12 +23,11 @@ function LoginPage() {
       if (data.access) {
         setUsername('');
         setPassword('');
-        setLoggedInUsername(data.user);
         setLoginError(null);
-        setIsLoggedIn(true);
-        setAccessToken(data.access);
-        console.log(data.access); // for debug remove in prod
-        setRefreshToken(data.refresh);
+        Cookies.set('accessToken', data.access, { expires: 7, secure: true, sameSite: 'strict' });
+        Cookies.set('refreshToken', data.refresh, { expires: 30, secure: true, sameSite: 'strict' });
+        Cookies.set('userId', data.user, { secure: true, sameSite: 'strict' });
+        Cookies.set('accountType', data.type, { secure: true, sameSite: 'strict' });
       } else if (data.error || data.detail) {
         setLoginError(data.error || data.detail);
       }
@@ -42,12 +37,8 @@ function LoginPage() {
     })
   }
 
-  if (isLoggedIn) {
-    return (
-      <>
-        <Dashboard username={loggedInUsername} access={accessToken} refresh={refreshToken} />
-      </>
-    )
+  if (Cookies.get('accessToken')) {
+    window.location.pathname = '/home';
   } else {
     return (
       <>
@@ -55,15 +46,13 @@ function LoginPage() {
           <h2 className="">Login to Allen Academy</h2>
           <form method="POST" onSubmit={handleLogin} id="login-form">
             <div className="d-grid gap-2">
-              <div>
-                <input
-                  type="text"
-                  className="form-control text-center"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
+              <input
+                type="text"
+                className="form-control text-center"
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
               <input
                 type="password"
                 className="form-control text-center"
