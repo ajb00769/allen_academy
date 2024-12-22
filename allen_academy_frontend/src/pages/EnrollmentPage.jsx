@@ -11,9 +11,8 @@ function EnrollmentPage(props) {
       <div>
         <h2 className="text-center mt-2">Enrollment</h2>
         <form method="POST" id="enrollment-form">
-          <div className="d-grid gap-2">
+          <div className="container d-grid gap-2">
             <EnrollmentFormOptions accounttype={Cookies.get('accountType')} college={props.college} />
-            <button type="submit" className="btn btn-outline-success">Submit</button>
           </div>
         </form>
       </div>
