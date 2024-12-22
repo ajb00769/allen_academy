@@ -122,6 +122,19 @@ def get_subject_list(request):
 
 
 @api_view(["POST"])
+def get_subject_block(request):
+    result = handle_jwt(request)
+    if "error" in result:
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+    subject_code = request.data.get("subject_code")
+    subject_blocks = SubjectBlockSerializer(
+        SubjectBlock.objects.filter(subject_code=subject_code), many=True
+    ).data
+    return Response({"result": subject_blocks}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
 def get_subject_schedule_list(request):
     result = handle_jwt(request)
     if "error" in result:
