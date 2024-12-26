@@ -10,6 +10,7 @@ function EnrollmentPage() {
   const [enrollmentError, setEnrollmentError] = useState(null);
   const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState('');
+  const [selectedCourseId, setSelectedCourseId] = useState('');
   const accessToken = Cookies.get('accessToken');
   const accountType = Cookies.get('accountType');
 
@@ -36,6 +37,10 @@ function EnrollmentPage() {
 
   const handleBlockSelect = (blockId) => {
     setSelectedBlockId(blockId);
+  }
+
+  const handleCourseSelect = (courseId) => {
+    setSelectedCourseId(courseId);
   }
 
   const handleFormSubmit = async (e) => {
@@ -72,15 +77,17 @@ function EnrollmentPage() {
       <LoggedInAs />
       <div>
         <h2 className='text-center mt-2 mb-5'>Enrollment</h2>
-        {enrollmentError && (
-          <div className='alert alert-danger'>An error occured: {enrollmentError}.</div>
-        )}
-        {enrollmentSuccess && (
-          <div className='alert alert-success'>Successfully enrolled.</div>
-        )}
+        <div className='d-flex justify-content-center'>
+          {enrollmentError && (
+            <div className='alert alert-danger w-75'>An error occured: {enrollmentError}.</div>
+          )}
+          {enrollmentSuccess && (
+            <div className='alert alert-success w-75'>Successfully enrolled.</div>
+          )}
+        </div>
         <form method='POST' id='enrollment-form' onSubmit={handleFormSubmit}>
-          <div className='container d-grid gap-2'>
-            <EnrollmentFormOptions accounttype={accountType} course={courseData} onBlockSelect={handleBlockSelect} />
+          <div className='container d-grid gap-2 card-max-width'>
+            <EnrollmentFormOptions accounttype={accountType} course={courseData} onBlockSelect={handleBlockSelect} onCourseSelect={handleCourseSelect} />
           </div>
         </form>
       </div>

@@ -107,6 +107,8 @@ function EnrollmentFormOptions(props) {
   // cookies
   const [accessToken, setAccessToken] = useState(Cookies.get('accessToken'));
   const [refreshToken, setRefreshToken] = useState(Cookies.get('refreshToken'));
+  // input validators
+  const [allFieldsFilled, setAllFieldsFilled] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -183,6 +185,9 @@ function EnrollmentFormOptions(props) {
       console.error('Error fetching schedule from block:', error);
     }
   }
+
+  useEffect(() => {
+  })
 
   if (collegeOptions == undefined) {
     return (
@@ -288,7 +293,9 @@ function EnrollmentFormOptions(props) {
   } else {
     return (
       <>
-        <div className='alert alert-warning'>You haven't enrolled to a course. Please select the college and course to enroll in.</div>
+        <div className='d-flex justify-content-center'>
+          <div className='card-max-width d-flex alert alert-warning'>You haven't enrolled to a course. Please select the college and course to enroll in.</div>
+        </div>
         <div className='container-fluid d-grid gap-1 text-center'>
           College:
           <select value={selectedCollege} onChange={handleCollegeChange} id='college' className='form-select mb-2'>
@@ -314,7 +321,7 @@ function EnrollmentFormOptions(props) {
           </select>
         </div>
         <div className='d-flex justify-content-center d-grid gap-5'>
-          <button type='submit' className='btn btn-outline-primary disabled' id='enrollment-submit-btn'>Submit</button>
+          <button type='submit' className='btn btn-outline-primary' id='enrollment-submit-btn'>Submit</button>
           <button type='submit' className='btn btn-secondary' id='cancel'>Cancel</button>
         </div>
       </>

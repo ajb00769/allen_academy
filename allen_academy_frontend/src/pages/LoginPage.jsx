@@ -7,14 +7,14 @@ function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     const formData = new FormData(e.target);
     formData.append('username', username);
     formData.append('password', password);
 
-    fetch(loginAPI, {
+    await fetch(loginAPI, {
       method: 'POST',
       body: formData,
     }).then((response) => {
@@ -24,8 +24,8 @@ function LoginPage() {
         setUsername('');
         setPassword('');
         setLoginError(null);
-        Cookies.set('accessToken', data.access, { expires: 7, secure: true, sameSite: 'strict' });
-        Cookies.set('refreshToken', data.refresh, { expires: 30, secure: true, sameSite: 'strict' });
+        Cookies.set('accessToken', data.access, { expires: 1, secure: true, sameSite: 'strict' });
+        Cookies.set('refreshToken', data.refresh, { expires: 7, secure: true, sameSite: 'strict' });
         Cookies.set('userId', data.user, { secure: true, sameSite: 'strict' });
         Cookies.set('accountType', data.type, { secure: true, sameSite: 'strict' });
       } else if (data.error || data.detail) {
