@@ -11,39 +11,42 @@ function Banner() {
   const [bannerError, setBannerError] = useState(null);
   const loginTicker = <LoggedInAs />;
   const accessToken = Cookies.get('accessToken');
+  const accountType = Cookies.get('accountType');
+
+  async function fetchCourseData(formData) {
+    try {
+      const response = await fetch(studentCourseAPI, {
+        'method': 'POST',
+        'body': formData,
+      })
+
+      const data = await response.json();
+
+      if (data.course && window.location.pathname == "/home") {
+        setIsEnrolled(true);
+        setCourseName(data.course);
+        setCollegeName(data.college);
+      } else if (data.course && accountType == "STU") {
+        return (data.course);
+      } else if (accountType == "EMP") {
+        setIsEmployee(true);
+      } else if (data.warning) {
+        setIsEnrolled(false);
+        setBannerError(data.warning);
+        return data.warning;
+      } else if (data.error) {
+        setBannerError(data.error);
+      }
+    } catch {
+      console.error('Unexpected error: ', error);
+      setBannerError('An unexpected error occured');
+    }
+  }
+
   const formData = new FormData();
   formData.append('token', accessToken);
 
-  useEffect(() => {
-    async function fetchCourseData() {
-      try {
-        const response = await fetch(studentCourseAPI, {
-          'method': 'POST',
-          'body': formData,
-        })
-
-        const data = await response.json();
-
-        if (data.course) {
-          setIsEnrolled(true);
-          setCourseName(data.course);
-          setCollegeName(data.college);
-        } else if (Cookies.get('accountType') == "EMP") {
-          setIsEmployee(true);
-        } else if (data.warning) {
-          setIsEnrolled(false);
-          setBannerError(data.warning);
-        } else if (data.error) {
-          setBannerError(data.error);
-        }
-      } catch {
-        console.error('Unexpected error: ', error);
-        setBannerError('An unexpected error occured');
-      }
-    }
-
-    fetchCourseData();
-  }, []);
+  useEffect(() => { fetchCourseData(formData) }, []);
 
   if (isEnrolled) {
     return (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { userScheduleAPI } from "./constants";
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 
 function ScheduleList() {
   const [scheduleList, setScheduleList] = useState([]);

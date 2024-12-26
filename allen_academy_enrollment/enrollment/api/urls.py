@@ -19,4 +19,7 @@ urlpatterns = [
     path("get_user_schedule/", views.get_user_schedule, name="user_schedule"),
     path("get_course/", views.get_course, name="get_course"),
     path("get_subject_block_list/", views.get_subject_block, name="subject_block_list"),
+    path(
+        "get_block_schedule_list/", views.get_block_schedule, name="block_schedule_list"
+    ),
 ]

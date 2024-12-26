@@ -135,6 +135,19 @@ def get_subject_block(request):
 
 
 @api_view(["POST"])
+def get_block_schedule(request):
+    result = handle_jwt(request)
+    if "error" in result:
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+    block_id = request.data.get("block_id")
+    schedules = ClassScheduleSerializer(
+        ClassSchedule.objects.filter(block_id=block_id), many=True
+    ).data
+    return Response({"result": schedules}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
 def get_subject_schedule_list(request):
     result = handle_jwt(request)
     if "error" in result:
@@ -193,7 +206,7 @@ def get_course(request):
             {"warning": "not_enrolled_to_course"}, status=status.HTTP_200_OK
         )
     except Exception as e:
-        return Response({"warning": str(e)}, status=status.HTTP_501_NOT_IMPLEMENTED)
+        return Response({"error": str(e)}, status=status.HTTP_501_NOT_IMPLEMENTED)
     return Response(
         {
             "course": course_name,
@@ -277,7 +290,7 @@ def enroll_subject_schedule(request):
 
     account_id = decoded.get("user_id")
     account_type = decoded.get("account_type")
-    schedule_id = request.data.get("schedule_id")
+    block_id = request.data.get("block_id")
 
     if account_type == "PAR":
         return Response(
@@ -285,14 +298,20 @@ def enroll_subject_schedule(request):
         )
 
     try:
-        if any(var is None for var in [account_id, account_type, schedule_id]):
+        if any(var is None for var in [account_id, account_type, block_id]):
             raise Exception("required_field_is_null")
+
+        schedules = [
+            schedule.schedule_id
+            for schedule in ClassSchedule.objects.filter(block_id=block_id)
+        ]
+
         student_course_model = StudentCourse.objects.get(student_id=account_id)
         student_course_id = student_course_model.course_id
         ClassSchedule.objects.select_related(
             "subject_block__course_subject__course"
         ).filter(
-            schedule_id=schedule_id,
+            schedule_id=schedules[0],
             subject_block__course_subject__course__course_id=student_course_id,
         ).values(
             "course__course_id"
@@ -306,38 +325,41 @@ def enroll_subject_schedule(request):
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    payload = {"account_id": account_id, "schedule_id": schedule_id}
+    for schedule_id in schedules:
+        proposed_schedule = ClassSchedule.objects.get(schedule_id=schedule_id)
+        # get the data model for user-block/schedule to return results of all enrolled schedules
+        enrollment_model = enrollment_mapping.get(account_type).get("model")
+        existing_schedule_obj = enrollment_model.objects.filter(account_id=account_id)
+        existing_schedule_arr = [
+            schedule.get_schedule_details()
+            for schedule in existing_schedule_obj
+            if schedule.get_schedule_details().day_of_wk == proposed_schedule.day_of_wk
+            and (
+                proposed_schedule.start_time < schedule.get_schedule_details().end_time
+                or proposed_schedule.end_time
+                < schedule.get_schedule_details().start_time
+            )
+        ]
+        # print(f"***\n\n\n\nDEBUG ATTENTION: {existing_schedule_arr}\n\n\n\n***")
+        # an array of ClassSchedule objects that have the same day of week of the prospect schedule to add for the user
 
-    # TODO: please handle schedule conflicts
-
-    proposed_schedule = ClassSchedule.objects.get(schedule_id=schedule_id)
-    # get the data model for user-block/schedule to return results of all enrolled schedules
-    enrollment_model = enrollment_mapping.get(account_type).get("model")
-    existing_schedule_obj = enrollment_model.objects.filter(account_id=account_id)
-    existing_schedule_arr = [
-        schedule.get_schedule_details()
-        for schedule in existing_schedule_obj
-        if schedule.get_schedule_details().day_of_wk == proposed_schedule.day_of_wk
-        and (
-            proposed_schedule.start_time < schedule.get_schedule_details().end_time
-            or proposed_schedule.end_time < schedule.get_schedule_details().start_time
-        )
-    ]
-    # print(f"***\n\n\n\nDEBUG ATTENTION: {existing_schedule_arr}\n\n\n\n***")
-    # an array of ClassSchedule objects that have the same day of week of the prospect schedule to add for the user
-
-    if existing_schedule_arr:
-        return Response(
-            {"error": "schedule_conflict"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    enrollment_serializer = enrollment_mapping.get(account_type).get("serializer")
-    serializer = enrollment_serializer(data=payload)
+        if existing_schedule_arr:
+            return Response(
+                {"error": "schedule_conflict"}, status=status.HTTP_400_BAD_REQUEST
+            )
 
     with transaction.atomic():
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"success": serializer.data}, status=status.HTTP_200_OK)
+        for schedule_id in schedules:
+            verified_payload = {"account_id": account_id, "schedule_id": schedule_id}
+            enrollment_serializer = enrollment_mapping.get(account_type).get(
+                "serializer"
+            )
+            serializer = enrollment_serializer(data=verified_payload)
+
+            if serializer.is_valid():
+                serializer.save()
+
+        return Response({"success": serializer.data}, status=status.HTTP_200_OK)
 
     return Response(
         {"error": "unable_to_enroll_subject"}, status=status.HTTP_400_BAD_REQUEST

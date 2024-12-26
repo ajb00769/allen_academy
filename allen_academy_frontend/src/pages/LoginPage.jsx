@@ -42,32 +42,36 @@ function LoginPage() {
   } else {
     return (
       <>
-        <div className="">
-          <h2 className="">Login to Allen Academy</h2>
-          <form method="POST" onSubmit={handleLogin} id="login-form">
-            <div className="d-grid gap-2">
-              <input
-                type="text"
-                className="form-control text-center"
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <input
-                type="password"
-                className="form-control text-center"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button type="submit" className="btn btn-outline-primary">Login</button>
-            </div>
+        <div>
+          <h2 className='text-center mt-3'>Login to Allen Academy</h2>
+          <div className='card card-body mx-auto my-5 w-75 card-max-width'>
+            <form method='POST' onSubmit={handleLogin} id='login-form'>
+              <div className='d-grid gap-2'>
+                <input
+                  type='text'
+                  className='form-control text-center'
+                  placeholder='Username'
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <input
+                  type='password'
+                  className='form-control text-center'
+                  placeholder='Password'
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <div className='mx-auto'>
+                  <button type='submit' className='btn btn-outline-primary'>Login</button>
+                </div>
+              </div>
+              <div>
+                {loginError && <p className='alert alert-danger'>{loginError}</p>}
+              </div>
+            </form>
             <div>
-              {loginError && <p className="alert alert-danger">{loginError}</p>}
+              <p>Don't have an account? Click <a href='#'>here</a> to register.</p>
             </div>
-          </form>
-          <div>
-            <p>Don't have an account? Click <a href="#">here</a> to register.</p>
           </div>
         </div>
       </>

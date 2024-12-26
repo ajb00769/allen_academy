@@ -4,4 +4,6 @@ export const userScheduleAPI = "http://localhost:8800/api/get_user_schedule/";
 export const getCollegeListAPI = "http://localhost:8800/api/get_dept_list/";
 export const getCourseListAPI = "http://localhost:8800/api/get_course_list/";
 export const getSubjectListAPI = "http://localhost:8800/api/get_subject_list/";
-export const getBlockListAPI = "http://localhost:8800/api/get_subject_schedule_list/";
+export const getBlockListAPI = "http://localhost:8800/api/get_subject_block_list/";
+export const getBlockScheduleAPI = "http://localhost:8800/api/get_block_schedule_list/";
+export const enrollSubjectBlockAPI = "http://localhost:8800/api/enroll_subject_schedule/";
