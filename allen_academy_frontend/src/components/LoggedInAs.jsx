@@ -1,10 +1,8 @@
-import Cookies from 'js-cookie';
-
-function LoggedInAs() {
+function LoggedInAs(props) {
   return (
     <>
       <div className="d-flex justify-content-end me-2">
-        <p><small>Logged in as <a href="#">{Cookies.get('userId')}</a></small></p>
+        <p><small>Logged in as <a href="#">{props.userId}</a></small></p>
       </div>
     </>
   )

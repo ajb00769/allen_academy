@@ -26,8 +26,6 @@ function LoginPage() {
         setLoginError(null);
         Cookies.set('accessToken', data.access, { expires: 1, secure: true, sameSite: 'strict' });
         Cookies.set('refreshToken', data.refresh, { expires: 7, secure: true, sameSite: 'strict' });
-        Cookies.set('userId', data.user, { secure: true, sameSite: 'strict' });
-        Cookies.set('accountType', data.type, { secure: true, sameSite: 'strict' });
       } else if (data.error || data.detail) {
         setLoginError(data.error || data.detail);
       }

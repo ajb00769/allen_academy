@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { studentCourseAPI } from './constants';
+import { fetchCourseData } from '../common/common'
+import { jwtDecode } from 'jwt-decode';
 import LoggedInAs from './LoggedInAs';
 import Cookies from 'js-cookie';
 
@@ -9,44 +10,36 @@ function Banner() {
   const [collegeName, setCollegeName] = useState('');
   const [courseName, setCourseName] = useState('');
   const [bannerError, setBannerError] = useState(null);
-  const loginTicker = <LoggedInAs />;
+  const decoded = jwtDecode(Cookies.get('accessToken'));
+  const accountType = decoded.account_type;
+  const loginTicker = <LoggedInAs userId={decoded.user_id} />;
   const accessToken = Cookies.get('accessToken');
-  const accountType = Cookies.get('accountType');
-
-  async function fetchCourseData(formData) {
-    try {
-      const response = await fetch(studentCourseAPI, {
-        'method': 'POST',
-        'body': formData,
-      })
-
-      const data = await response.json();
-
-      if (data.course && window.location.pathname == "/home") {
-        setIsEnrolled(true);
-        setCourseName(data.course);
-        setCollegeName(data.college);
-      } else if (data.course && accountType == "STU") {
-        return (data.course);
-      } else if (accountType == "EMP") {
-        setIsEmployee(true);
-      } else if (data.warning) {
-        setIsEnrolled(false);
-        setBannerError(data.warning);
-        return data.warning;
-      } else if (data.error) {
-        setBannerError(data.error);
-      }
-    } catch {
-      console.error('Unexpected error: ', error);
-      setBannerError('An unexpected error occured');
-    }
-  }
-
+  const [courseData, setCourseData] = useState([]);
   const formData = new FormData();
   formData.append('token', accessToken);
 
-  useEffect(() => { fetchCourseData(formData) }, []);
+  useEffect(() => {
+    const fetchedData = fetchCourseData(formData);
+    setCourseData(fetchedData);
+
+    if (courseData.course && window.location.pathname == "/home") {
+      setIsEnrolled(true);
+      setCourseName(courseData.course);
+      setCollegeName(courseData.college);
+    } else if (courseData.course && accountType == "STU") {
+      return (courseData.course);
+    } else if (accountType == "EMP") {
+      setIsEmployee(true);
+    } else if (courseData.warning) {
+      setIsEnrolled(false);
+      setBannerError(courseData.warning);
+      return courseData.warning;
+    } else if (courseData.error) {
+      setBannerError(courseData.error);
+    } else {
+      setBannerError('An unexpected error occured');
+    }
+  }, []);
 
   if (isEnrolled) {
     return (
