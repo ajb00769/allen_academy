@@ -7,3 +7,5 @@ export const getSubjectListAPI = "http://localhost:8800/api/get_subject_list/";
 export const getBlockListAPI = "http://localhost:8800/api/get_subject_block_list/";
 export const getBlockScheduleAPI = "http://localhost:8800/api/get_block_schedule_list/";
 export const enrollSubjectBlockAPI = "http://localhost:8800/api/enroll_subject_schedule/";
+export const enrollCourseAPI = "http://localhost:8800/api/enroll_course/";
+export const getUserDetailsAPI = "http://localhost:8080/api/get_user_details/";

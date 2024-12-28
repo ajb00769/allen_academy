@@ -105,8 +105,7 @@ function EnrollmentFormOptions(props) {
   const [blockOptions, setBlockOptions] = useState([]);
   const [blockSchedule, setBlockSchedule] = useState([]);
   // cookies
-  const [accessToken, setAccessToken] = useState(Cookies.get('accessToken'));
-  const [refreshToken, setRefreshToken] = useState(Cookies.get('refreshToken'));
+  const accessToken = Cookies.get('accessToken');
   // input validators
   const [allFieldsFilled, setAllFieldsFilled] = useState(false);
 
@@ -142,6 +141,7 @@ function EnrollmentFormOptions(props) {
 
   const handleCourseChange = async (event) => {
     setSelectedCourse(event.target.value);
+    props.onCourseSelect(event.target.value);
 
     const formData = new FormData();
     formData.append('course_id', event.target.value);
@@ -186,8 +186,25 @@ function EnrollmentFormOptions(props) {
     }
   }
 
+  const preSelectCourse = async () => {
+    setSelectedCourse(props.course);
+    const formData = new FormData();
+    formData.append('token', accessToken);
+    formData.append('course_id', props.course);
+
+    try {
+      const subjectData = await fetchSubjectOptions(formData);
+      setSubjectOptions(subjectData);
+    } catch (error) {
+      console.error('Error fetching subject options:', error);
+    }
+  }
+
   useEffect(() => {
-  })
+    if (props.course) {
+      preSelectCourse();
+    }
+  }, [props.course])
 
   if (collegeOptions == undefined) {
     return (
@@ -265,28 +282,46 @@ function EnrollmentFormOptions(props) {
         <div>
           <SchedulePreview schedule={blockSchedule} blockid={selectedBlock} />
         </div>
-
       </>
     )
   } else if (props.accounttype != 'EMP' && props.course) {
-    setSelectedCourse(props.course);
     return (
       <>
-        <div className='container-fluid d-grid gap-1 text-center'>
-          Subject:
-          <select value={selectedSubject} onChange={handleSubjectChange} id='subject' className='form-select mb-2'>
-            <option value='' disabled>Select an option</option>
-          </select>
-          Block:
-          <select value={selectedBlock} onChange={handleBlockChange} id='block' className='form-select mb-2'>
-            <option value='' disabled>Select an option</option>
-          </select>
+        <div className='row mb-3'>
+          <label htmlFor='subject' className='col-sm-2 col-form-label'>Subject</label>
+          <div className='col-sm-10'>
+            <select value={selectedSubject} onChange={handleSubjectChange} id='subject' className='form-select mb-2'>
+              <option value='' disabled>Select an option</option>
+              {
+                Object.entries(subjectOptions).map(([_, value], key) => (
+                  <option key={key} value={value['subject_code']}>
+                    {value['subject_name']}
+                  </option>
+                ))
+              }
+            </select>
+          </div>
+        </div>
+        <div className='row mb-3'>
+          <label htmlFor='subject' className='col-sm-2 col-form-label'>Block</label>
+          <div className='col-sm-10'>
+            <select value={selectedBlock} onChange={handleBlockChange} id='block' className='form-select mb-2'>
+              <option value='' disabled >Select an option</option>
+              {
+                Object.entries(blockOptions).map(([_, value], key) => (
+                  <option key={key} value={value['block_id']}>
+                    Block: {value['block_id']}
+                  </option>
+                ))
+              }
+            </select>
+          </div>
         </div>
         <div className='d-flex justify-content-center'>
           <button type='submit' className='btn btn-outline-primary' id='enrollment-submit-btn'>Submit</button>
         </div>
         <div>
-          <SchedulePreview schedule={blockSchedule} />
+          <SchedulePreview schedule={blockSchedule} blockid={selectedBlock} />
         </div>
       </>
     )

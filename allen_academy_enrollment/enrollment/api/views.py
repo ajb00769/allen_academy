@@ -186,6 +186,7 @@ def get_course(request):
             course_data = CourseSerializer(
                 Course.objects.get(course_code=enrolled_course)
             ).data
+            course_code = course_data.get("course_code")
             course_name = course_data.get("course_name")
             course_dept_id = course_data.get("dept_id")
 
@@ -209,6 +210,7 @@ def get_course(request):
         return Response({"error": str(e)}, status=status.HTTP_501_NOT_IMPLEMENTED)
     return Response(
         {
+            "course_code": course_code,
             "course": course_name,
             "college": department_name,
         },
@@ -322,8 +324,11 @@ def enroll_subject_schedule(request):
                 {"error": "not_enrolled_to_course_of_subject"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        return Response(
+            {"error": "an_unexpected_error_occured"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     for schedule_id in schedules:
         proposed_schedule = ClassSchedule.objects.get(schedule_id=schedule_id)

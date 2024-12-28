@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
-import { studentCourseAPI, enrollSubjectBlockAPI } from '../components/constants';
+import { studentCourseAPI, enrollSubjectBlockAPI, enrollCourseAPI } from '../components/constants';
+import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
 import NavBar from '../components/NavBar';
 import LoggedInAs from '../components/LoggedInAs';
 import EnrollmentFormOptions from '../components/EnrollmentFormOptions';
-import Cookies from 'js-cookie';
 
 function EnrollmentPage() {
-  const [courseData, setCourseData] = useState(null);
+  const [courseCode, setCourseCode] = useState(null);
   const [enrollmentError, setEnrollmentError] = useState(null);
   const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const accessToken = Cookies.get('accessToken');
-  const accountType = Cookies.get('accountType');
+  const decoded = jwtDecode(Cookies.get('accessToken'));
+  const accountType = decoded.account_type;
 
   async function fetchCourse(formData) {
     try {
@@ -23,7 +25,7 @@ function EnrollmentPage() {
       const data = await response.json();
 
       if (data) {
-        setCourseData(data.course);
+        setCourseCode(data.course_code);
       }
     } catch (error) {
       console.error('Error', error)
@@ -33,7 +35,7 @@ function EnrollmentPage() {
   const formData = new FormData();
   formData.append('token', accessToken);
 
-  useEffect(() => { fetchCourse(formData) });
+  useEffect(() => { fetchCourse(formData) }, []);
 
   const handleBlockSelect = (blockId) => {
     setSelectedBlockId(blockId);
@@ -46,29 +48,62 @@ function EnrollmentPage() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append('block_id', selectedBlockId);
-    formData.append('token', accessToken);
+    if (accountType != "EMP" && courseCode == null) {
+      const formData = new FormData();
+      formData.append('course_code', selectedCourseId);
+      formData.append('token', accessToken);
+      formData.append('account_id', decoded.user_id);
 
-    await fetch(enrollSubjectBlockAPI, {
-      method: 'POST',
-      body: formData,
-    }).then((response) => {
-      return response.json();
-    }).then((data) => {
-      console.log(data)
-      if (data.success) {
-        console.log('Enrollment success.')
-        setEnrollmentSuccess(true);
-        return true;
-      } else if (data.error) {
-        console.log('Enrollment failure.')
-        setEnrollmentError(data.error);
-      }
-    }).catch((error) => {
-      setEnrollmentError(error)
-      console.error('Error', error);
-    })
+      await fetch(enrollCourseAPI, {
+        method: 'POST',
+        body: formData,
+      }).then((response) => {
+        return response.json()
+      }).then((data) => {
+        console.log(data);
+        if (data.success) {
+          console.log('Enrollment to course is successful.')
+          setEnrollmentSuccess(true);
+          setTimeout(() => {
+            window.location.pathname = "/home";
+          }, 1000);
+          return true;
+        } else if (data.error) {
+          console.log('Enrollment failure.')
+          setEnrollmentError(data.error);
+        }
+      }).catch((error) => {
+        setEnrollmentError(error)
+        console.error('Error', error);
+      })
+    } else {
+      const formData = new FormData();
+      formData.append('block_id', selectedBlockId);
+      formData.append('token', accessToken);
+
+      await fetch(enrollSubjectBlockAPI, {
+        method: 'POST',
+        body: formData,
+      }).then((response) => {
+        return response.json();
+      }).then((data) => {
+        console.log(data)
+        if (data.success) {
+          console.log('Enrollment success.')
+          setEnrollmentSuccess(true);
+          setTimeout(() => {
+            window.location.pathname = "/schedule";
+          }, 1000);
+          return true;
+        } else if (data.error) {
+          console.log('Enrollment failure.')
+          setEnrollmentError(data.error);
+        }
+      }).catch((error) => {
+        setEnrollmentError(error)
+        console.error('Error', error);
+      })
+    }
   }
 
   return (
@@ -87,7 +122,7 @@ function EnrollmentPage() {
         </div>
         <form method='POST' id='enrollment-form' onSubmit={handleFormSubmit}>
           <div className='container d-grid gap-2 card-max-width'>
-            <EnrollmentFormOptions accounttype={accountType} course={courseData} onBlockSelect={handleBlockSelect} onCourseSelect={handleCourseSelect} />
+            <EnrollmentFormOptions accounttype={accountType} course={courseCode} onBlockSelect={handleBlockSelect} onCourseSelect={handleCourseSelect} />
           </div>
         </form>
       </div>

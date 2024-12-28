@@ -1,4 +1,4 @@
-import { studentCourseAPI } from '../components/constants';
+import { studentCourseAPI, getUserDetailsAPI } from '../components/constants';
 
 export async function fetchCourseData(formData) {
   try {
@@ -9,13 +9,23 @@ export async function fetchCourseData(formData) {
 
     const data = await response.json();
     return data;
-  } catch {
+  } catch (error) {
     console.error('Unexpected error: ', error);
+    return null;
   }
 }
 
-export async function fetchUserDetails(accessToken) {
+export async function fetchUserDetails(formData) {
   try {
-    const response = await fetch()
+    const response = await fetch(getUserDetailsAPI, {
+      'method': 'POST',
+      'body': formData,
+    })
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Unexpected error: ', error)
+    return null;
   }
 }
