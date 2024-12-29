@@ -308,25 +308,31 @@ def enroll_subject_schedule(request):
             for schedule in ClassSchedule.objects.filter(block_id=block_id)
         ]
 
-        student_course_model = StudentCourse.objects.get(student_id=account_id)
-        student_course_id = student_course_model.course_id
-        ClassSchedule.objects.select_related(
-            "subject_block__course_subject__course"
-        ).filter(
-            schedule_id=schedules[0],
-            subject_block__course_subject__course__course_id=student_course_id,
-        ).values(
-            "course__course_id"
-        )
+        subject_code = SubjectBlockSerializer(
+            SubjectBlock.objects.select_related("subject_code")
+            .filter(block_id=block_id)
+            .first()
+        ).data.get("subject_code")
+
+        subject_course = CourseSubjectSerializer(
+            CourseSubject.objects.get(subject_code=subject_code)
+        ).data.get("course_code")
+
+        student_course = StudentCourseSerializer(
+            StudentCourse.objects.get(student_id=account_id)
+        ).data.get("course_id")
+
+        if subject_course != student_course:
+            raise ObjectDoesNotExist
     except ObjectDoesNotExist:
         if account_type == "STU":
             return Response(
                 {"error": "not_enrolled_to_course_of_subject"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-    except Exception:
+    except Exception as e:
         return Response(
-            {"error": "an_unexpected_error_occured"},
+            {"error": str(e)},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
