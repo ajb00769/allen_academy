@@ -3,10 +3,6 @@ import Banner from "../components/Banner";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import RegKeyCard from "../components/RegKeyCard";
-import CreateDeptCard from "../components/CreateDeptCard";
-import CreateCourseCard from "../components/CreateCourseCard";
-import CreateSubjectCard from "../components/CreateSubjectCard";
-import CreateBlockCard from "../components/CreateBlockCard";
 
 function HomePage() {
   const accessToken = Cookies.get('accessToken');
@@ -18,7 +14,7 @@ function HomePage() {
       <>
         <NavBar />
         <Banner />
-        {accountType == "EMP" ? <> <RegKeyCard /> <CreateDeptCard /> <CreateCourseCard /> <CreateSubjectCard /> <CreateBlockCard /> </> : null}
+        {accountType == "EMP" ? <> <RegKeyCard /> </> : null}
       </>
     )
   } else {
