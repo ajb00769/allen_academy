@@ -9,3 +9,6 @@ export const getBlockScheduleAPI = "http://localhost:8800/api/get_block_schedule
 export const enrollSubjectBlockAPI = "http://localhost:8800/api/enroll_subject_schedule/";
 export const enrollCourseAPI = "http://localhost:8800/api/enroll_course/";
 export const getUserDetailsAPI = "http://localhost:8080/api/get_user_details/";
+export const getAccountTypeOptionsAPI = "http://localhost:8000/api/get_account_type_options/";
+export const generateRegKeyAPI = "";
+export const registrationAPI = "";

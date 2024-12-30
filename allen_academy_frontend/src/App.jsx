@@ -2,6 +2,7 @@ import LoginPage from './pages/LoginPage';
 import EnrollmentPage from './pages/EnrollmentPage';
 import SchedulePage from './pages/SchedulePage';
 import HomePage from './pages/HomePage';
+import RegKey from './pages/RegKey';
 
 function App() {
   let Page;
@@ -17,6 +18,9 @@ function App() {
       break;
     case "/schedule":
       Page = <SchedulePage />
+      break;
+    case "/regkey":
+      Page = <RegKey />
       break;
     default:
       Page = <LoginPage />
