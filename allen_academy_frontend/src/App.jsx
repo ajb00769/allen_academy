@@ -3,6 +3,7 @@ import EnrollmentPage from './pages/EnrollmentPage';
 import SchedulePage from './pages/SchedulePage';
 import HomePage from './pages/HomePage';
 import RegKey from './pages/RegKey';
+import Register from './pages/Register';
 
 function App() {
   let Page;
@@ -22,8 +23,11 @@ function App() {
     case "/regkey":
       Page = <RegKey />
       break;
+    case "/register":
+      Page = <Register />
+      break;
     default:
-      Page = <LoginPage />
+      window.location.pathname = "/";
       break;
   }
   return (

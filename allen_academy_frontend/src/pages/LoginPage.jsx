@@ -68,7 +68,7 @@ function LoginPage() {
               </div>
             </form>
             <div>
-              <p>Don't have an account? Click <a href='#'>here</a> to register.</p>
+              <p>Don't have an account? Click <a href='/register'>here</a> to register.</p>
             </div>
           </div>
         </div>

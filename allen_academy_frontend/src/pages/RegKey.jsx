@@ -25,6 +25,10 @@ export default function RegKey() {
   const decodedToken = jwtDecode(accessToken);
   const accountType = decodedToken.account_type;
 
+  if (!accessToken) {
+    window.location.pathname = '/';
+  }
+
   const keyTypeOptions = [{ 'EMP': 'Employee' }, { 'STU': 'Student' }, { 'PAR': 'Parent' }];
   const [selectedKeyType, setSelectedKeyType] = useState('');
   const [accountTypeOptions, setAccountTypeOptions] = useState([]);
