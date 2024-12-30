@@ -3,7 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
 import NavBar from "../components/NavBar";
 import LoggedInAs from "../components/LoggedInAs";
-import { getAccountTypeOptionsAPI } from "../components/constants";
+import { getAccountTypeOptionsAPI, generateRegKeyAPI } from "../components/constants";
 
 async function fetchKeyTypeOptions(formData) {
   try {
@@ -30,6 +30,7 @@ export default function RegKey() {
   const [accountTypeOptions, setAccountTypeOptions] = useState([]);
   const [selectedAccountTypeOption, setSelectedAccountTypeOption] = useState('');
   const [generatedFor, setGeneratedFor] = useState('');
+  const [generatedKey, setGeneratedKey] = useState('');
 
   const handleSelectedKeyTypeChange = async (event) => {
     setSelectedKeyType(event.target.value);
@@ -47,11 +48,26 @@ export default function RegKey() {
     }
   }
 
-  const handleRegKeyFormSubmit = (event) => {
+  const handleRegKeyFormSubmit = async (event) => {
     event.preventDefault();
 
-    console.log(selectedKeyType);
-    console.log(generatedFor);
+    const formData = new FormData();
+    formData.append('key_type', selectedKeyType);
+    formData.append('year_level', selectedAccountTypeOption);
+    formData.append('generated_for', generatedFor);
+
+    try {
+      const response = await fetch(generateRegKeyAPI, {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await response.json();
+      if (data.generated_key) {
+        setGeneratedKey(data.generated_key);
+      }
+    } catch (error) {
+      console.error('An error occured while generating the registration key ', error);
+    }
   }
 
   if (accountType == "EMP") {
@@ -61,6 +77,11 @@ export default function RegKey() {
         <LoggedInAs />
         <div>
           <h2 className='text-center mt-2 mb-5'>Registration Key Generation</h2>
+          <div className='d-flex justify-content-center container'>
+            {generatedKey && (
+              <div className='alert alert-success text-center w-75'>Successfully generated registration key: <span className='fw-bold font-monospace'>{generatedKey}</span> </div>
+            )}
+          </div>
           <form method='POST' id='reg-key-form' onSubmit={handleRegKeyFormSubmit}>
             <div className='container d-grid gap-2 card-max-width'>
               <div className='row mb-3'>
