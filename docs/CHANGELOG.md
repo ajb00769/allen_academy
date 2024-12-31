@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [1.0.0] - 2024-12-31
+- **Fixed**: All pending issues and box
+- **Added**: All remaining functionalities
+- First release created
+
 ## [0.1.1] - 2024-11-25
 - **Fixed**: Bug where a student gets an invalid account type error when attempting to register caused by code attempting to store data into the wrong table.
 - **Fixed**: Bug where updating a department returns the correct JSON response but no data is updated on the DB.

@@ -1,5 +1,4 @@
 # CS50W Final Project
-
 *Note: Read this documentation in the Obsidian note taking app for the best experience.*
 ## Table of Contents
 
@@ -9,16 +8,13 @@
 4. [[#Core Design Principles]]
 5. [[#Tech Stack]]
 6. [[#Planning, Design, and Architecture]]
-	1. [[#Major School Management Activities]]
-	2. [[#Application Features]]
+	1. [[#Application Features]]
 		1. [[#Feature Implementation Strategies]]
-	3. [[#Software Architecture]]
-	4. [[#Data Architecture]]
-	5. [[#Application Deployment Strategies]]
-	6. [[#Cybersecurity Strategies]]
+	2. [[#Software Architecture]]
+	3. [[#Data Architecture]]
 7. [[#Data Models]]
-8. Developer Set-Up
-9. Distinctiveness and Complexity
+8. [[#Distinctiveness and Complexity]]
+
 ## Introduction
 
 This purpose of this document is to meticulously detail the thought process, design concepts and implementation strategies employed during the development of this application. It serves as a comprehensive guide including instructions in deploying the application.
@@ -106,69 +102,37 @@ I chose Docker for my project due to its ability to create and manage individual
 
 Also, with Docker, scaling up and down is easier because you can simply create a new container with the base image when needed. This approach allows for rapid scaling of applications, as containers can be spun up or down quickly to match the current traffic.
 
-
 ## Planning, Design, and Architecture
 
-With the improvement of internet connectivity and reliability in recent years compared to how it was in the early 90s and 2000s where you'd be lucky enough to have a 1 mbps connection, architectural concepts such as Service Oriented Architecture (SOA) have become more feasible than ever before. An advantage of SOA for this project is that we can dynamically scale each individual service depending on the traffic.
-
-### Major School Management Activities
-1. Staffing
-	1. Applying for jobs on a school's website
-		1. Applicants can upload their  resume on google drive and just submit the link
-2. School Operating Expenses
-	I am aware there are other operating expenses for schools such as utility expenses, maintenance, and supplies but for the purposes of this project I want to solely focus on Salaries. Other features can be implemented in the future.
-	1. Salaries
-3. Student Enrollment
-	1. Tuition Fee Calculation and Payment
-	2. Class Creation and Scheduling
-4. Student Testing and Grading
-	1. Entrance Exam Scheduling and Result Posting (Still opt for pen and paper exams)
-	2. Student Tests and Quizzes (Online Implementation can involve the quiz starting and ending at a fixed time, no retakes, time limits on questions to prevent cheating for objective tests, browser listens if student switches to another tab or window)
-	3. Student Projects
-5. Student Discipline
-6. Parent Involvement
-7. Forecasting and Predictive Analysis
+With the improvement of internet connectivity and reliability in recent years compared to how it was in the early 90s and 2000s where you'd be lucky enough to have a 1 mbps connection, architectural concepts such as Service Oriented Architecture (SOA) have become more feasible than ever before. An advantage of SOA and APIs for this project is that we can dynamically scale each individual service depending on the traffic.
 
 
 ### Application Features
 
 ##### Enrollment
 ---
-If a first time enrollee was deemed to have passed the school registrar will proceed to fill in the details of the student in a web form. The account
+Student can enroll to courses and subjects and Employees can select classes they want teach in via the app and are able to view their schedules. The app handles possible schedule conflicts, preventing students from enrolling to a class that has overlapping schedules.
 
+##### Registration
+---
+Registration system operates via an Employee or the Registrar's office generating a unique registration key for students/employees/parents. Validation exists for registration key account types (i.e. A student cannot enroll as an Employee or Parent because their registration key is tied to a particular account type)
 
-- Subject and Block Creation
-- Department Creation
-- Tuition Calculation and Payment Tracking
-- School Inventory Management
-- Staff Salary Calculator and Attendance Tracker
-- Class Scheduling
-- Student Grading and Attendance
-- Parent Portal
-- Upload Subject Syllabus, Pointers with Deadline for Submission
-- Online Class Records
-- Online Classes Schedules, Assignment Posting, Quizzes
-- Notification System (i.e. no class today because of emergency)
+##### Login
+---
+A separate login service handles user authentication and fetching user details.
 
-### Feature Implementation Strategies
-
-TODO
-
-Classroom attendance, a unique QR code is generated for each student for each class that they will scan as proof of their attendance. The choice of implementing a unique QR code for each student is to prevent students from taking pictures of the QR code and sending it to their absent classmates to take attendance. A timestamp is also recorded when students clock in.
-
-Login Service
-
-Manages login, authentication, and user management
+##### School Administration
+---
+A service that's dedicated to department, class, and schedule management to exists since it is expected that traffic for POST/write requests to this service will usually be high especially during the enrollment period and during off-enrollment period, traffic will still be high but mostly GET/read requests.
 
 ### Software Architecture
 
 #### Services
 
-Login and Registration
-Enrollment and Class Scheduling
-Student Management - i've chosen to separate enrollment and student management services because enrollment is a seasonal event while student management happens all the time, parent portal is also included here, this will be the service that gets the most amount of traffic
-School Administration - paying of salaries, managing employees of the school
-
+- Login
+- Registration
+- Enrollment and Class Scheduling
+- School Administration - paying of salaries, managing employees of the school
 
 
 ### Data Architecture
@@ -177,19 +141,11 @@ Although it is considered best practice to create foreign key relationships on t
 
 I've also chosen to partition tables by category beforehand in order to reduce overhead, specifically by separating students, parents, and staff so that we can reduce overhead when a query or modification is being made for a user or group of users that belong to the same category especially when the stud
 
-### Application Deployment Strategies
-
-Minify and tree shake front end before deployment.
-
-### Cybersecurity Strategies
-
-
 ## Data Models
 
 The column with an asterisk (`*`) is the primary key and the column with a caret (`^`) are the foreign keys.
 
 ## `Register Service`
-
 
 ### `RegistrationKey`
 | Column Name      | Data Type   | Nullable | Description                        |
@@ -205,8 +161,10 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | --------------- | --------- | -------- | ----------------------- |
 | `generated_id^` | `CHAR(9)` | N        | **UNIQUE**, Primary key |
 
-### `StudentAccount`
-| Column Name   | Data Type     | Nullable | Description                                                                  |
+
+### `AllAccount`
+
+| Column Name   | Data Type     | Nullable | escription                                                                   |
 | ------------- | ------------- | -------- | ---------------------------------------------------------------------------- |
 | `account_id^` | `CHAR(9)`     | N        | **UNIQUE**, Primary key, Foreign key referencing `AllAccountId.generated_id` |
 | `email`       | `VARCHAR`     | N        | Unique email address                                                         |
@@ -226,35 +184,19 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `phone`       | `CHAR(16)`  | Y        | Student's phone number                                                       |
 | `status`      | `CHAR(1)`   | N        | Student's account status                                                     |
 
-### `EmployeeAccount`
-| Column Name       | Data Type       | Nullable | Description                                                                                          |
-| ----------------- | --------------- | -------- | ---------------------------------------------------------------------------------------------------- |
-| `account_id^`     | `CHAR(9)`       | N        | **UNIQUE**, Primary key, Foreign key referencing `AllAccountId.generated_id`                          |
-| `email`           | `VARCHAR`       | N        | Unique email address                                                                                 |
-| `password`        | `BINARY(255)`   | N        | Binary field for storing password                                                                     |
-| `allow_login`     | `BOOL`          | N        | Indicates if the employee account is allowed to log in                                                |
-
 ### `EmployeeDetail`
-| Column Name       | Data Type       | Nullable | Description                                                                                          |
-| ----------------- | --------------- | -------- | ---------------------------------------------------------------------------------------------------- |
-| `account_id^`     | `CHAR(9)`       | N        | **UNIQUE**, Primary key, Foreign key referencing `EmployeeAccount.account_id`                         |
-| `first_name`      | `CHAR(80)`      | N        | Employee's first name                                                                                 |
-| `middle_name`     | `CHAR(80)`      | Y        | Employee's middle name                                                                                |
-| `last_name`       | `CHAR(80)`      | N        | Employee's last name                                                                                 |
-| `suffix`          | `CHAR(3)`       | Y        | Suffix (e.g., Jr., Sr., II)                                                                            |
-| `birthday`        | `DATE`          | N        | Employee's date of birth                                                                              |
-| `address`         | `CHAR(255)`     | N        | Employee's address                                                                                    |
-| `phone`           | `CHAR(16)`      | N        | Employee's phone number                                                                               |
-| `employment_type` | `CHAR(1)`       | N        | Employee's employment type                                                                            |
-| `status`          | `CHAR(1)`       | N        | Employee's account status                                                                             |
-
-### `ParentAccount`
-| Column Name   | Data Type     | Nullable | Description                                                                  |
-| ------------- | ------------- | -------- | ---------------------------------------------------------------------------- |
-| `account_id^` | `CHAR(9)`     | N        | **UNIQUE**, Primary key, Foreign key referencing `AllAccountId.generated_id` |
-| `email`       | `VARCHAR`     | N        | Unique email address                                                         |
-| `password`    | `BINARY(255)` | N        | Binary field for storing password                                            |
-| `allow_login` | `BOOL`        | N        | Indicates if the parent account is allowed to log in                         |
+| Column Name       | Data Type   | Nullable | Description                                                                   |
+| ----------------- | ----------- | -------- | ----------------------------------------------------------------------------- |
+| `account_id^`     | `CHAR(9)`   | N        | **UNIQUE**, Primary key, Foreign key referencing `EmployeeAccount.account_id` |
+| `first_name`      | `CHAR(80)`  | N        | Employee's first name                                                         |
+| `middle_name`     | `CHAR(80)`  | Y        | Employee's middle name                                                        |
+| `last_name`       | `CHAR(80)`  | N        | Employee's last name                                                          |
+| `suffix`          | `CHAR(3)`   | Y        | Suffix (e.g., Jr., Sr., II)                                                   |
+| `birthday`        | `DATE`      | N        | Employee's date of birth                                                      |
+| `address`         | `CHAR(255)` | N        | Employee's address                                                            |
+| `phone`           | `CHAR(16)`  | N        | Employee's phone number                                                       |
+| `employment_type` | `CHAR(1)`   | N        | Employee's employment type                                                    |
+| `status`          | `CHAR(1)`   | N        | Employee's account status                                                     |
 
 ### `ParentDetail`
 | Column Name    | Data Type   | Nullable | Description                                                                 |
@@ -270,8 +212,7 @@ The column with an asterisk (`*`) is the primary key and the column with a caret
 | `relationship` | `CHAR(1)`   | N        | Relationship to the student                                                 |
 | `student`      | `CHAR(9)`   | N        | Foreign key referencing `StudentDetail.account_id`                          |
 
-------------- everything below is for other services/for future editing --------------
-### `DEPARTMENTS`
+### `Department`
 
 A table that contains all school departments. It is self-referencing in the context of parent-child department relationships.
 
@@ -281,48 +222,12 @@ A table that contains all school departments. It is self-referencing in the cont
 | `DEPT_PARENT^` | `CHAR(3)`       | Y        | Null if the department itself is the main department, contains the `DEPT_ID` of its parent department if it is a child department. |
 | `DEPT_NAME`    | `NVARCHAR(120)` | N        | **UNIQUE** to prevent potential duplicate department name creation. Fully spelled out name of the department.                      |
 | `DEPT_HEAD^`   | `INT`           | N        | FK `EMPLOYEE_ID`                                                                                                                   |
+| `CREATED_BY`   |                 |          |                                                                                                                                    |
+| `CREATED_ON`   |                 |          |                                                                                                                                    |
+| `UPDATED_BY`   |                 |          |                                                                                                                                    |
+| `UPDATED_ON`   |                 |          |                                                                                                                                    |
 
-### `SALARY`
-Salary is the monthly wage.
-
-| Column Name | Data Type | Nullable | Description |
-| ---- | ---- | ---- | ---- |
-| `EMPLOYEE_ID^` | `INT` | N |  |
-| `SALARY` | `FLOAT` | N | Monthly |
-| `CREATED_BY^` | `INT` | N | FK `EMPLOYEE_ID` |
-| `CREATE_DATE` | `DATE` | N |  |
-| `CHANGED_BY^` | `INT` | N | FK `EMPLOYEE_ID` |
-| `CHANGE_DATE` | `INT` | N |  |
-
-### `EMPLOYEE_ATTENDANCE`
-| Column Name | Data Type | Nullable | Description |
-| ---- | ---- | ---- | ---- |
-| `EMPLOYEE_ID^` | `INT` | N |  |
-| `DATE_TIME_IN` | `DATETIME` | Y |  |
-| `DATE_TIME_OUT` | `DATETIME` | Y |  |
-
-### `EMPLOYEE_SALARY_HIST`
-| Column Name | Data Type | Nullable | Description |
-| ---- | ---- | ---- | ---- |
-| `EMPLOYEE_ID^` | `INT` | N |  |
-| `SALARY_PAID` | `FLOAT` | N |  |
-| `DATE_PAID` | `DATE` | N |  |
-| `PROMOTION_FLAG` | `BOOL` | Y |  |
-| `INCREASE_FLAG` | `BOOL` | Y |  |
-
-### `STUDENT_VIOLATIONS`
-| Column Name | Data Type | Nullable | Description |
-| --- | --- | --- | --- |
-| `STUDENT_ID` | `INT` | N | Reference to `STUDENT_ID` in `CURRENT_STUDENTS` table |
-| `VIOLATION_CODE` | `INT` | N | Reference to `VIOLATION_CODE` in `VIOLATION_CODES` table |
-
-### `VIOLATION_CODES`
-| Column Name | Data Type | Nullable | Description |
-| ---- | ---- | ---- | ---- |
-| `VIOLATION_CODE*` | `INT` | N |  |
-| `DECODE` | `NVARCHAR(255)` | N |  |
-
-### `COURSES`
+### `Course`
 | Column Name    | Data Type       | Nullable | Description                                   |
 | -------------- | --------------- | -------- | --------------------------------------------- |
 | `COURSE_CODE*` | `VARCHAR(10)`   | N        | Unique identifier for the course              |
@@ -330,69 +235,42 @@ Salary is the monthly wage.
 | `TOTAL_UNITS`  | `INT`           | N        | Total units required for the course           |
 | `DEPT_ID^`     | `CHAR(3)`       | N        | Reference to `DEPT_ID` in `DEPARTMENTS` table |
 
-### `SUBJECTS`
-| Column Name | Data Type | Nullable | Description |
-| --- | --- | --- | --- |
-| `SUBJECT_CODE*` | `VARCHAR(10)` | N | Unique identifier for the subject |
-| `SUBJECT_TYPE` | `CHAR(10)` | N | Type of the subject (Major, Minor, Elective) |
-| `SUBJECT_NAME` | `NVARCHAR(100)` | N | Full name of the subject |
-| `SUBJECT_UNITS` | `INT` | N | Units required for the subject |
-| `WK_CLASS_DURA` | `FLOAT` | N | Weekly class duration measured in hours |
-| `SUBJECT_TUITION` | `FLOAT` | N | Tuition fee for the subject |
-| `DEPT_ID^` | `CHAR(3)` | N | Reference to `DEPT_ID` in `DEPARTMENTS` table |
+### `Subject`
+| Column Name       | Data Type       | Nullable | Description                                                                               |
+| ----------------- | --------------- | -------- | ----------------------------------------------------------------------------------------- |
+| `SUBJECT_CODE*`   | `VARCHAR(10)`   | N        | Unique identifier for the subject                                                         |
+| `SUBJECT_TYPE`    | `CHAR(10)`      | N        | Type of the subject (Major, Minor, Elective)                                              |
+| `SUBJECT_NAME`    | `NVARCHAR(100)` | N        | Full name of the subject                                                                  |
+| `SUBJECT_UNITS`   | `INT`           | N        | Units required for the subject                                                            |
+| `WK_CLASS_DURA`   | `FLOAT`         | N        | Weekly class duration measured in hours                                                   |
+| `SUBJECT_TUITION` | `FLOAT`         | N        | Tuition fee for the subject per unit<br>(total tuition = subject_units * subject tuition) |
+| `DEPT_ID^`        | `CHAR(3)`       | N        | Reference to `DEPT_ID` in `DEPARTMENTS` table                                             |
+| `COURSE_CODE^`    | `CHAR(10)`      | N        | FK Reference to Course                                                                    |
+| `COURSE_YR_LVL`   | `INT`           | N        | Course year level that the subject is offered                                             |
 
-### `CLASSES`
-| Column Name | Data Type | Nullable | Description |
-| --- | --- | --- | --- |
-| `CLASS_ID*` | `INT` | N | Unique identifier for the class |
-| `SUBJECT_CODE^` | `VARCHAR(10)` | N | Reference to `SUBJECT_CODE` in `SUBJECTS` table |
-| `SUBJ_BLOCK` | `VARCHAR(10)` | N | Block name of the subject |
-| `PROFESSOR^` | `INT` | N | Reference to `EMPLOYEE_ID` in `EMPLOYEES` table |
-| `SEMESTER` | `CHAR(1)` | N | Semester of the class (Spring, Summer, Fall) |
-| `SCHOOL_YEAR` | `INT` | N | School year of the class |
-| `START_DATE` | `DATE` | N | Start date of the class |
-| `END_DATE` | `DATE` | N | End date of the class |
-| `COMPLETED` | `BOOL` | N | Whether the class has been completed |
-| `ACTIVE_FLAG` | `BOOL` | N | Whether the class is active |
+### `ClassSubject`
+| Column Name     | Data Type     | Nullable | Description                                     |
+| --------------- | ------------- | -------- | ----------------------------------------------- |
+| `CLASS_ID*`     | `INT`         | N        | Unique identifier for the class                 |
+| `SUBJECT_CODE^` | `VARCHAR(10)` | N        | Reference to `SUBJECT_CODE` in `SUBJECTS` table |
+| `SUBJ_BLOCK`    | `VARCHAR(10)` | N        | Block name of the subject                       |
+| `PROFESSOR^`    | `INT`         | N        | Reference to `EMPLOYEE_ID` in `EMPLOYEES` table |
+| `SEMESTER`      | `CHAR(1)`     | N        | Semester of the class (1st or 2nd)              |
+| `SCHOOL_YEAR`   | `INT`         | N        | School year of the class                        |
+| `START_DATE`    | `DATE`        | N        | Start date of the class                         |
+| `END_DATE`      | `DATE`        | N        | End date of the class                           |
+| `COMPLETED`     | `BOOL`        | N        | Whether the class has been completed            |
+| `ACTIVE_FLAG`   | `BOOL`        | N        | Whether the class is active                     |
 
-### `CLASS_SCHEDULES`
-| Column Name | Data Type | Nullable | Description |
-| --- | --- | --- | --- |
-| `SCHEDULE_ID*` | `INT` | N | Unique identifier for the schedule |
-| `CLASS_ID^` | `INT` | N | Reference to `CLASS_ID` in `CLASSES` table |
-| `DAY_OF_WEEK` | `CHAR(1)` | N | Day of the week (Monday, Tuesday, Wednesday, Thursday, Friday) |
-| `START_TIME` | `TIME` | N | Start time of the class |
-| `END_TIME` | `TIME` | N | End time of the class |
-| `PURGE_FLAG` | `BOOL` | N | Whether the schedule has been purged |
-
-### `STUDENT_SUBJECTS`
-| Column Name   | Data Type | Nullable | Description                                                |
-| ------------- | --------- | -------- | ---------------------------------------------------------- |
-| `STUDENT_ID^` | `INT`     | N        | Reference to `STUDENT_ID` in `CURRENT_STUDENTS` table      |
-| `SUBJECT_ID^` | `INT`     | N        | Reference to `Subject_Code` in `SUBJECTS` table            |
-| `YEAR`        | `INT`     | N        | Academic year the subject is being studied                 |
-| `STATUS`      | `CHAR(1)` | N        | Status of the subject study ('A'ctive, 'P'assed, 'F'ailed) |
-
-### `GRADES`
-| Column Name | Data Type | Nullable | Description |
-| ---- | ---- | ---- | ---- |
-| `GRADE_ID*` | `INT` | N | Unique identifier for each grade entry. |
-| `STUDENT_ID^` | `INT` | N | Foreign key referencing `CURRENT_STUDENTS` and `INACTIVE_STUDENTS`. |
-| `SUBJECT_ID^` | `INT` | N | Foreign key referencing `SUBJECTS`. |
-| `SEMESTER` | `CHAR(1)` | N | Semester of the grade entry. |
-| `SCHOOL_YEAR` | `INT` | N | Year of the grade entry. |
-| `GRADE_LETTER` | `CHAR(1)` | N | Grade letter (A, B, C, D, F). |
-| `GRADE_NUMERIC` | `INT` | N | Numeric representation of the grade (e.g., 90 for A, 80 for B, etc.). |
-
-
-### DEVELOPMENT NOTES and Considerations:
-
-- create an unclustered index on email since it will be frequently used during login validation
-- explore database partitioning especially for student scholarship types
-- come up with a credits table which will be used to check if a student can enroll into the subject or year-level because year levels and some subjects have pre-requisites
-- create separate relationship table for violations and scholarship status
-- passing dates into the API must follow this format: "1995-12-31" or "YYYY-MM-DD"
-- frontend must pass  key type based on the frontend directory. there should be a different frontend registration directory for each account type. if the user enters the correct registration key under the wrong account type portal (i.e. student is in the staff registration portal and entered their student key they will get an error that their registration key belongs to a different registration portal - without specifying which portal so we will have 3 layers of protection (1) uniqueness of the registration key, (2) registration key and the name of the person it was generated for must match, (3) registration key must be registered under the correct portal)
+### `ClassSchedule`
+| Column Name    | Data Type | Nullable | Description                                                    |
+| -------------- | --------- | -------- | -------------------------------------------------------------- |
+| `SCHEDULE_ID*` | `INT`     | N        | Unique identifier for the schedule                             |
+| `CLASS_ID^`    | `INT`     | N        | Reference to `CLASS_ID` in `CLASSES` table                     |
+| `DAY_OF_WEEK`  | `CHAR(1)` | N        | Day of the week (Monday, Tuesday, Wednesday, Thursday, Friday) |
+| `START_TIME`   | `TIME`    | N        | Start time of the class                                        |
+| `END_TIME`     | `TIME`    | N        | End time of the class                                          |
+| `PURGE_FLAG`   | `BOOL`    | N        | Whether the schedule has been purged                           |
 
 
 ## Triggers
@@ -422,17 +300,209 @@ EXECUTE FUNCTION purge_used_reg_keys();
 | `AAR-00002` | Arguments passed into the parameter is invalid. Could be that it's not a valid choice or not in the valid format or data type. |
 | `AAR-99999` | Unhandled error in endpoint. Please contact the developer of the API with the error message from the log file.                 |
 
+## Payloads for Testing
 
-### .ENV file format:
+### VALID Reg_Key Input
+```
+{
+	"key_type": "EMP",
+	"generated_for": "Potter Harry",
+	"year_level": "COLT"
+}
+```
 
-APP_SECRET_KEY=""
-DEBUG_MODE=True
-DJANGO_ALLOWED_HOSTS="0.0.0.0"
+### VALID Registration Input
+#### TEACHER
+```
+{
+	"last_name": "Potter",
+	"first_name": "Harry",
+	"password": "1234",
+	"email": "testemail@email.com",
+	"address": "test address",
+	"birthday": "1997-05-06",
+	"phone": "+1800123456789",
+	"key_type": "EMP",
+	"employment_type": "T",
+	"reg_key": "9de6-a918-1a41-945f",
+	"teaching_year_lvl": "COLT"
+}
+```
 
-DB_NAME="postgres"
-DB_USER="postgres"
-DB_PASSWORD=""
-DB_HOST="db"
-DB_PORT="5432"
+#### STUDENT
+```
+{
+	"last_name": "Potter",
+	"first_name": "Harry",
+	"password": "1234",
+	"email": "testemail3@email.com",
+	"address": "test address",
+	"birthday": "1997-05-06",
+	"phone": "+1800123456789",
+	"key_type": "STU",
+	"reg_key": "2423-720b-f230-26a5"
+}
+```
 
-LOGFILE="register_api_logs.log"
+### VALID Login Input
+```
+{
+	"username": "testemail@email.com",
+	"password": "1234"
+}
+```
+
+### Sample JWT Response
+```
+{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcyNzA1MTI2OSwiaWF0IjoxNzIyNzMxMjY5LCJqdGkiOiI4NmZkMGJjMTc4YTU0ZTk4OGEzNTgwOWEzZmJiNjBiMyIsInVzZXJfaWQiOiIyMDI0MDAwMDAiLCJhY2NvdW50X3R5cGUiOiJFTVAifQ.Ch0iOEeF_rllZ5oYPhrQ_vFnyWK29CISlh88CsfmNuI",
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIyNzQyMDY5LCJpYXQiOjE3MjI3MzEyNjksImp0aSI6IjI4MTM2MTBhMDJhMDQxZTJiNjlkODgxMGJiMTI5YWNmIiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.EgbG6DUfmjPwliJz2rN6d9iVo5LkPX-BuHQr9n6tXjQ",
+    "user": "testemail@email.com"
+}
+```
+
+
+### Testing payloads in schadmin
+
+#### `create_dept`
+
+```
+{
+    "dept_id": "ENGG",
+    "dept_name": "Engineering Department",
+    "dept_head": "202400000",
+    "created_by": "202400000",
+	"created_on": "2024-06-14",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMyNDUxOTEzLCJpYXQiOjE3MzI0NDExMTMsImp0aSI6ImI5ZTFjMTNkOWM2NjQ2Mzg4Y2Y4ZWExZGY5YmMxNjZhIiwidXNlcl9pZCI6IjIwMjQwMDAwMSIsImFjY291bnRfdHlwZSI6IkVNUCJ9.AwZ8VDSnSEShtUT0fJT-KELDQty7vwyK5bsEcLMVcvY"
+}
+```
+
+### `create_course`
+
+```
+{
+	"dept_id": "ENGG",
+	"total_units": 127,
+	"course_name": "Electrical Engineering",
+	"course_code": "BSEE",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIyODg4MjY0LCJpYXQiOjE3MjI4Nzc0NjQsImp0aSI6ImVjMDk2MDZiZDJmZjQ2ODJiOTc0OTgxYTc3ZWI0OTk0IiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.1X_mljNCmWKTZuy_WtRhE6y11CiLo4aKWyrnqSJiQX0"
+}
+```
+
+### `create_subject`
+
+```
+{
+    "subject_code": "DC",
+    "subject_type": "M",
+    "subject_name": "Differential Calculus",
+    "subject_units": 4,
+    "wk_class_dura": 1,
+    "subject_tuition": 1904.21,
+    "course_code": "BSEE",
+    "course_yr_lvl": "COL1",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIyODg4MjY0LCJpYXQiOjE3MjI4Nzc0NjQsImp0aSI6ImVjMDk2MDZiZDJmZjQ2ODJiOTc0OTgxYTc3ZWI0OTk0IiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.1X_mljNCmWKTZuy_WtRhE6y11CiLo4aKWyrnqSJiQX0"
+}
+```
+
+### `create_subject_block`
+
+```
+{
+	"block_id": "1234",
+    "subject_code": "DC",
+    "professor": "202400000",
+    "semester": 1,
+    "start_date": "2024-06-28",
+    "end_date": "2024-09-11",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM0ODY4NTczLCJpYXQiOjE3MzQ4NTc3NzMsImp0aSI6ImViMWExOWExZmM2NzQ2MzhhMGU0NDViYjEzNDcyZGNhIiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.ck_NB5Cryqz_6vxL9XpHAbwD0D8cGRH3aPVsnyQ2YGU"
+}
+```
+
+### `create_schedule`
+
+```
+{
+	"schedule_id": 1337,
+    "block_id": "1234",
+    "day_of_wk": "Tue",
+    "start_time": "10:30",
+    "end_time": "12:30",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM0ODY4NTczLCJpYXQiOjE3MzQ4NTc3NzMsImp0aSI6ImViMWExOWExZmM2NzQ2MzhhMGU0NDViYjEzNDcyZGNhIiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.ck_NB5Cryqz_6vxL9XpHAbwD0D8cGRH3aPVsnyQ2YGU"
+}
+```
+
+```
+{
+	"schedule_id": 808,
+    "block_id": "1234",
+    "day_of_wk": "Wed",
+    "start_time": "10:30",
+    "end_time": "12:30",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM1MTg1ODk2LCJpYXQiOjE3MzUxNzUwOTYsImp0aSI6ImJmYWEzZjFmMGJiYTQxYTQ5MmE3ZjU4NTM3MzI2MjhlIiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.t-6BeoIBF6bqy-d7Us0xidY2ThtyAfMVgTsSXOqdU2o"
+}
+```
+### Refresh Token
+
+```
+{
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTcyNzA1MTI2OSwiaWF0IjoxNzIyNzMxMjY5LCJqdGkiOiI4NmZkMGJjMTc4YTU0ZTk4OGEzNTgwOWEzZmJiNjBiMyIsInVzZXJfaWQiOiIyMDI0MDAwMDAiLCJhY2NvdW50X3R5cGUiOiJFTVAifQ.Ch0iOEeF_rllZ5oYPhrQ_vFnyWK29CISlh88CsfmNuI"
+}
+```
+
+### `enroll_course`
+```
+{
+	"account_id": "202400002",
+	"course_code": "BSEE",
+	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzMyMzg0NzQ5LCJpYXQiOjE3MzIzNzM5NDksImp0aSI6IjgxZjVhZWIzNGQ3MTQ0MDViODdkOWZjMTRiNDcwN2Y5IiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.SEVN5P02BSncTqiFTZwRKUfgK5BDoyrFNtIlIpCU_hQ"
+}
+```
+
+### `get_course_list`
+
+```
+{
+	"dept_id": "ENGG",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIyNzQyMDY5LCJpYXQiOjE3MjI3MzEyNjksImp0aSI6IjI4MTM2MTBhMDJhMDQxZTJiNjlkODgxMGJiMTI5YWNmIiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.EgbG6DUfmjPwliJz2rN6d9iVo5LkPX-BuHQr9n6tXjQ"
+}
+```
+
+### `get_subject_list`
+
+```
+{
+	"course_id": "BSEE",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIyNzQyMDY5LCJpYXQiOjE3MjI3MzEyNjksImp0aSI6IjI4MTM2MTBhMDJhMDQxZTJiNjlkODgxMGJiMTI5YWNmIiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.EgbG6DUfmjPwliJz2rN6d9iVo5LkPX-BuHQr9n6tXjQ"
+}
+```
+
+### `get_subject_schedules`
+
+```
+{
+	"subject_code": "DC",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzIyNzQyMDY5LCJpYXQiOjE3MjI3MzEyNjksImp0aSI6IjI4MTM2MTBhMDJhMDQxZTJiNjlkODgxMGJiMTI5YWNmIiwidXNlcl9pZCI6IjIwMjQwMDAwMCIsImFjY291bnRfdHlwZSI6IkVNUCJ9.EgbG6DUfmjPwliJz2rN6d9iVo5LkPX-BuHQr9n6tXjQ"
+}
+```
+
+### `enroll_subject_schedule`
+
+```
+{
+	"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM1NDg3NzcxLCJpYXQiOjE3MzU0NzY5NzEsImp0aSI6IjA1ZGVmY2U3ODc3YjRlMTA4YjFmZmRiZGM0Y2UzN2E3IiwidXNlcl9pZCI6IjIwMjQwMDAwMSIsImFjY291bnRfdHlwZSI6IlNUVSJ9.lEniXeUM-cgvme6c7LQ30Q4NOiMnsE2z2e-W6ayklR0",
+	"block_id": "1234"
+}
+```
+
+### Distinctiveness and Complexity
+
+What makes this project distinct from the previous/existing exercises/projects is the utilization of APIs and the separation of concerns by deploying each service into a separate server/container.
+
+This makes everything more complex because of how authentication will be handled from each request from the frontend to the backend where I employed the usage of JSON Web Tokens (JWT) which I learned a lot about as I was implementing the project and what best practices should be followed.
+
+I especially learned not to store critical info in user Cookies because Cookies are prone to manipulation, in one instance I was able to gain Employee-level authorization via the frontend just by editing the Account Type cookie which I have since then removed and any/all transactions are authenticated via the backend so that even in the off-chance that a frontend developer makes the same mistake, the backend will block the requests without proper authorization.
+
+Another thing that contributed to the complexity of this project is the deployment of the services which I orchestrated via docker compose and configuring the Dockerfiles and docker-compose files was also a unique learning experience that made the project a tad bit more complex but also enjoyable. I learned to use .env files and it add them in the .gitignore because that's where the secret keys will be stored and will be created as environment variables during deployment.
+
+I may have missed a lot of other things that also contributed to the complexity of the application but overall I believe it's complex enough to meet the requirements! I hope you have a good time perusing my code!
