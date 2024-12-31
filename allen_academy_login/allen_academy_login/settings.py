@@ -54,6 +54,10 @@ DEBUG = os.getenv("DEBUG_MODE")
 fetch_allowed_hosts = os.getenv("DJANGO_ALLOWED_HOSTS")
 ALLOWED_HOSTS = ["*"] if fetch_allowed_hosts is None else fetch_allowed_hosts.split(",")
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5176",
+    "https://localhost:5176",
+]  # DEVLOPMENT: update with the frontend's actual url
 
 # Application definition
 
@@ -64,6 +68,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
     "register",
@@ -73,6 +78,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",

@@ -282,6 +282,7 @@ class EmployeeDetail(models.Model):
     employment_type = models.CharField(
         choices=EMPLOYEE_TYPE_CHOICES,
         max_length=1,
+        default=EMPLOYEE_TYPE_CHOICES[0][0],
         blank=False,
         null=False,
     )

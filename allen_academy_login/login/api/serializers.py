@@ -12,4 +12,5 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         data["user"] = self.user.email
+        data["type"] = self.user.account_type
         return data

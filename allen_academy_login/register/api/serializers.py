@@ -38,3 +38,9 @@ class ParentDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParentDetail
         fields = "__all__"
+
+
+class StudentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentDetail
+        fields = "__all__"

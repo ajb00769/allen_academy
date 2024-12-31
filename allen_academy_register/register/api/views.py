@@ -1,6 +1,7 @@
 from django.db import IntegrityError, transaction
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from register.models import (
@@ -22,6 +23,7 @@ from register.custom_utils.custom import (
     generate_account_id,
     date_time_handler,
 )
+from custom_common.jwt_handler import handle_jwt
 from register.custom_utils.errors import (
     NULL_ARGS_ERROR,
     INVALID_ARGS_ERROR,
@@ -266,10 +268,58 @@ def reg_key(request):
         with transaction.atomic():
             if new_key_serializer.is_valid():
                 new_key_serializer.save()
-                return Response(new_key_serializer.data, status=201)
+                return Response(new_key_serializer.data, status=status.HTTP_201_CREATED)
             raise Exception(new_key_serializer.errors)
     except Exception as e:
         return handle_exception(e, func_name=func_name)
+
+
+@api_view(["POST"])
+def get_account_type_options(request):
+    result = handle_jwt(request)
+    if "error" in result:
+        return Response(result, status=status.HTTP_400_BAD_REQUEST)
+
+    account_type = request.data.get("key_type")
+
+    if account_type == "STU":
+        student_options = dict(
+            ELEMENTARY_SCHOOL_CHOICES
+            + MIDDLE_SCHOOL_CHOICES
+            + HIGH_SCHOOL_CHOICES
+            + COLLEGE_LEVEL_CHOICES
+            + LAW_CHOICES
+            + MASTERS_CHOICES
+            + PHD_CHOICES
+        )
+
+        return Response(
+            {"data": [{key: value} for key, value in student_options.items()]},
+            status=status.HTTP_200_OK,
+        )
+    elif account_type == "EMP":
+        return Response(
+            {
+                "data": [
+                    {key: value}
+                    for key, value in dict(EMPLOYEE_YEAR_LEVEL_CHOICES).items()
+                ]
+            },
+            status=status.HTTP_200_OK,
+        )
+    elif account_type == "PAR":
+        return Response(
+            {
+                "data": [
+                    {key: value} for key, value in dict(FAMILY_TYPE_CHOICES).items()
+                ]
+            },
+            status=status.HTTP_200_OK,
+        )
+    else:
+        return Response(
+            {"error": "invalid_account_type_regkey"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 #########################################################################

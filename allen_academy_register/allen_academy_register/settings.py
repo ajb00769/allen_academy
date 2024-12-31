@@ -20,7 +20,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Running environment variable checks
 env_keys = [
     "APP_SECRET_KEY",
@@ -30,6 +29,7 @@ env_keys = [
     "DB_USER",
     "DB_HOST",
     "DB_PORT",
+    "JWT_SECRET_KEY",
 ]
 
 for key in env_keys:
@@ -38,18 +38,23 @@ for key in env_keys:
             f"Environment Variable {key} missing. Please create required environment variable"
         )
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("APP_SECRET_KEY")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG_MODE")
 
 fetch_allowed_hosts = os.getenv("DJANGO_ALLOWED_HOSTS")
-ALLOWED_HOSTS = fetch_allowed_hosts.split(",")
+ALLOWED_HOSTS = ["*"] if fetch_allowed_hosts is None else fetch_allowed_hosts.split(",")
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5176",
+    "https://localhost:5176",
+]  # DEVLOPMENT: update with the frontend's actual url
 
 
 # Application definition
@@ -62,12 +67,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "rest_framework_simplejwt",
+    "corsheaders",
     "register",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
