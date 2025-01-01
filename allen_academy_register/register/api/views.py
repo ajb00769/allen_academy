@@ -168,7 +168,7 @@ def register(request):
                 try:
                     stored_teaching_year_lvl = RegistrationKey.objects.get(
                         generated_key=request.data.get("reg_key")
-                    )
+                    ).data.get("year_level")
 
                     if (
                         request.data.get("teaching_year_lvl")
