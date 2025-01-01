@@ -164,6 +164,32 @@ def register(request):
                         return Response(DATA_DOES_NOT_MATCH_ERROR, status=400)
                 except ObjectDoesNotExist:
                     return Response(NULL_ARGS_ERROR, status=400)
+            if key_type == "EMP":
+                try:
+                    stored_teaching_year_lvl = RegistrationKey.objects.get(
+                        generated_key=request.data.get("reg_key")
+                    )
+
+                    if (
+                        request.data.get("teaching_year_lvl")
+                        != stored_teaching_year_lvl
+                    ):
+                        reg_key_obj = RegistrationKey.objects.get(
+                            generated_key=request.data.get("reg_key")
+                        )
+                        reg_key_obj.key_used = False
+                        reg_key_obj.save()
+                        return Response(
+                            {
+                                "error": "Teaching year level stored in reg key does not match the teaching year level you submitted. Please select the correct teaching year level. If this is not correct please go to the registrar to confirm what year level you are teaching."
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                except ObjectDoesNotExist:
+                    return Response(
+                        {"error": "Registration key does not exist"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
             account_serializer = AllAccountSerializer(data=account_serializer_data)
 
             if not account_serializer.is_valid():

@@ -182,12 +182,8 @@ export default function Register() {
       formData.append('relationship', selectedRelationship);
     }
 
-    if (selectedAccountType == "STU") {
-      formData.append('current_yr_level', selectedYearLevel);
-    }
-
     if (selectedAccountType == "EMP") {
-      formData.append('teaching_year_lvl', selectedYearLevel);
+      formData.append('teaching_year_lvl', selectedTeachingYearLevel);
     }
 
     try {
@@ -235,23 +231,6 @@ export default function Register() {
                 </div>
               </div>
               <RegisterStandardFormFields onLastNameChange={handleLastNameChange} onFirstNameChange={handleFirstNameChange} onEmailChange={handleEmailChange} onPasswordChange={handlePasswordChange} onConfirmPasswordChange={handleConfirmPasswordChange} onAddressChange={handleAddressChange} onPhoneNumberChange={handlePhoneNumberChange} onRegistrationKeyChange={handleRegistrationKeyChange} onBirthDateChange={handleBirthDateChange} />
-              {
-                selectedAccountType == "STU" && (
-                  <div className='mb-3'>
-                    <label htmlFor='yearlevel' className='col-form-label'>Year Level</label>
-                    <select value={selectedYearLevel} onChange={handleYearLevelChange} id='yearlevel' className='form-select mb-2'>
-                      <option value='' disabled>Select an option</option>
-                      {
-                        Object.entries(yearLevelOptions).map(([_, value], key) => (
-                          <option key={key} value={Object.keys(value)}>
-                            {value[Object.keys(value)]}
-                          </option>
-                        ))
-                      }
-                    </select>
-                  </div>
-                )
-              }
               {
                 selectedAccountType == "EMP" && (
                   <div className='mb-3'>
