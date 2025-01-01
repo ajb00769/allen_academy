@@ -169,7 +169,7 @@ export default function Register() {
     const formData = new FormData();
     formData.append('last_name', lastName);
     formData.append('first_name', firstName);
-    formData.append('password', password);
+    formData.append('password', confirmPassword);
     formData.append('email', email);
     formData.append('address', address);
     formData.append('birthday', birthDate);

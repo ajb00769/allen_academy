@@ -217,11 +217,14 @@ def register(request):
                 detail_serializer_data.update({"relationship": stored_relationship})
 
             detail_serializer_data.update({"account_id": account_object.account_id})
+            detail_serializer_data.update({"is_active": True})
             detail_serializer = detail_serializer_class(data=detail_serializer_data)
 
             if not detail_serializer.is_valid():
                 raise Exception(detail_serializer.errors)
             detail_serializer.save()
+            account_object.is_active = True
+            account_object.save()
 
             return Response(detail_serializer.data, status=201)
     except Exception as e:
